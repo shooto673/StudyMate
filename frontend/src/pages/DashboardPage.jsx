@@ -89,9 +89,8 @@ export default function DashboardPage({
           >
             <ProgressRing value={unit.progress || 0} />
             <div className="unit-main">
-              <div className="unit-grade">{unit.grade_slug?.replace('j', '中')}</div>
+              <div className="unit-grade">{unit.grade?.replace('j', '中')}</div>
               <h3>{unit.title}</h3>
-              <p>{unit.description}</p>
             </div>
             <span className="arrow">›</span>
           </button>

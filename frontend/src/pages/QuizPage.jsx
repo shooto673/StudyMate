@@ -25,7 +25,19 @@ export default function QuizPage({ unit, questions, onBack, onFinish }) {
   const question = questions[currentIndex]
   const choices = question.choices || []
   const progress = ((currentIndex + (showFeedback ? 1 : 0)) / questions.length) * 100
-  const isCorrect = selectedIndex === question.correct_index
+
+  // correct_answer (text) または correct_index (number) の両方に対応
+  const getCorrectIndex = (q) => {
+    if (typeof q.correct_index === 'number') return q.correct_index
+    if (typeof q.correct_answer === 'string') {
+      const idx = q.choices.indexOf(q.correct_answer)
+      return idx >= 0 ? idx : 0
+    }
+    return 0
+  }
+
+  const correctIdx = getCorrectIndex(question)
+  const isCorrect = selectedIndex === correctIdx
 
   const handleSelect = (choiceIndex) => {
     if (selectedIndex !== null) return
@@ -35,9 +47,9 @@ export default function QuizPage({ unit, questions, onBack, onFinish }) {
       ...prev,
       {
         questionId: question.id,
-        question,
+        question: { ...question, _correctIndex: getCorrectIndex(question) },
         selectedIndex: choiceIndex,
-        isCorrect: choiceIndex === question.correct_index,
+        isCorrect: choiceIndex === getCorrectIndex(question),
       },
     ])
   }
@@ -70,9 +82,9 @@ export default function QuizPage({ unit, questions, onBack, onFinish }) {
           {choices.map((choice, index) => {
             let cn = 'choice'
             if (selectedIndex !== null) {
-              if (index === selectedIndex && index === question.correct_index) cn += ' correct'
+              if (index === selectedIndex && index === correctIdx) cn += ' correct'
               else if (index === selectedIndex) cn += ' wrong'
-              else if (index === question.correct_index) cn += ' reveal'
+              else if (index === correctIdx) cn += ' reveal'
               else cn += ' muted'
             }
             return (

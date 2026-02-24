@@ -31,11 +31,11 @@ export function getPlans() {
 export async function fetchUnits(gradeSlug) {
   let query = supabase
     .from('units')
-    .select('id, slug, title, description, grade_slug, sort_order, subject_id')
-    .order('sort_order')
+    .select('id, slug, title, grade, display_order, subject_id')
+    .order('display_order')
 
   if (gradeSlug) {
-    query = query.eq('grade_slug', gradeSlug)
+    query = query.eq('grade', gradeSlug)
   }
 
   const { data, error } = await query

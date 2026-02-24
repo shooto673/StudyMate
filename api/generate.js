@@ -90,10 +90,11 @@ export default async function handler(req, res) {
       .map((q, i) => ({
         id: `gen-${unitSlug}-${Date.now()}-${i}`,
         body: q.body,
+        question_type: 'multiple_choice',
         choices: q.choices,
         correct_index: q.correct_index,
+        correct_answer: q.choices[q.correct_index],
         explanation: q.explanation,
-        sort_order: i + 1,
       }))
 
     if (validated.length === 0) {
