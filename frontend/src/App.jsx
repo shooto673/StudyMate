@@ -132,28 +132,21 @@ export default function App() {
 
     // Find real unit from loaded units
     const unit = units.find((u) => u.slug === unitSlug)
-    if (!unit) {
-      // Fallback: try to load questions with slug directly
-      try {
-        const questions = await fetchQuestions(unitSlug)
-        setCurrentUnit({ slug: unitSlug, title: unitSlug })
-        setCurrentQuestions(questions)
-        setQuizAnswers([])
-        setPage('quiz')
-      } catch (err) {
-        setError(err.message || '問題取得に失敗しました')
-      }
-      return
-    }
+    const resolvedUnit = unit || { slug: unitSlug, title: unitSlug }
 
     try {
-      const questions = await fetchQuestions(unit.slug)
-      setCurrentUnit(unit)
+      const questions = await fetchQuestions(resolvedUnit.slug)
+      setCurrentUnit(resolvedUnit)
       setCurrentQuestions(questions)
       setQuizAnswers([])
       setPage('quiz')
     } catch (err) {
-      setError(err.message || '問題取得に失敗しました')
+      // API failed — navigate to quiz with empty questions (uses fallback dummy data)
+      console.warn('API問題生成失敗、ダミーデータを使用:', err.message)
+      setCurrentUnit(resolvedUnit)
+      setCurrentQuestions([])
+      setQuizAnswers([])
+      setPage('quiz')
     }
   }
 
