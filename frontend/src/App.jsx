@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from './contexts/AuthContext'
-import Header from './components/Header'
+import FloatingDecorations from './components/FloatingDecorations'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import GradeSelectPage from './pages/GradeSelectPage'
@@ -11,7 +12,6 @@ import ResultsPage from './pages/ResultsPage'
 import ReviewPage from './pages/ReviewPage'
 import {
   getGrades,
-  getPlans,
   fetchUnits,
   fetchQuestions,
   fetchStats,
@@ -25,13 +25,13 @@ import {
 import './styles/app.css'
 
 const grades = getGrades()
-const plans = getPlans()
 
 export default function App() {
   const { user, profile, planTier, loading: authLoading, refreshProfile } = useAuth()
 
   const [page, setPage] = useState('landing')
   const [selectedGradeId, setSelectedGradeId] = useState(null)
+  const [selectedSubject, setSelectedSubject] = useState('english')
   const [units, setUnits] = useState([])
   const [currentUnit, setCurrentUnit] = useState(null)
   const [currentQuestions, setCurrentQuestions] = useState([])
@@ -42,11 +42,14 @@ export default function App() {
   const [error, setError] = useState('')
   const [dataLoading, setDataLoading] = useState(false)
 
+  const isLoggedIn = !!user
+
   const selectedGradeLabel = useMemo(() => {
-    return grades.find((g) => g.id === selectedGradeId)?.label || ''
+    const g = grades.find((g) => g.id === selectedGradeId)
+    return g ? `${g.label} ${g.emoji}` : ''
   }, [selectedGradeId])
 
-  // ユーザーがログインしたらダッシュボードへ
+  // Auto-redirect logged-in users to dashboard
   useEffect(() => {
     if (!authLoading && user && page === 'landing') {
       const grade = profile?.grade || 'j1'
@@ -55,7 +58,7 @@ export default function App() {
     }
   }, [authLoading, user, profile])
 
-  // ダッシュボード表示時にデータ読み込み
+  // Load dashboard data
   const loadDashboardData = useCallback(async (gradeId) => {
     if (!user) return
     setDataLoading(true)
@@ -68,7 +71,6 @@ export default function App() {
         fetchPlanLimit(planTier),
       ])
 
-      // 進捗データ取得
       const unitIds = unitList.map((u) => u.id)
       const progressMap = await fetchUnitProgress(user.id, unitIds)
       const unitsWithProgress = unitList.map((u) => ({
@@ -93,42 +95,57 @@ export default function App() {
     }
   }, [page, selectedGradeId, user, loadDashboardData])
 
-  // ─── ハンドラー ─────────────────────
-
-  const handleSelectGrade = (gradeId) => {
-    setSelectedGradeId(gradeId)
+  // ─── Navigation handler ─────────────────
+  const handleNavigate = (pageName) => {
+    setPage(pageName)
   }
 
-  const handleConfirmGrade = async () => {
-    if (!selectedGradeId || !user) return
-    try {
-      await updateProfileGrade(user.id, selectedGradeId)
-      await refreshProfile()
-      setPage('dashboard')
-    } catch {
-      setPage('dashboard')
+  // Grade select
+  const handleSelectGrade = (gradeLabel) => {
+    // Find grade by label match
+    const grade = grades.find(
+      (g) => g.label === gradeLabel || `${g.label} ${g.emoji}` === gradeLabel
+    )
+    if (grade) {
+      setSelectedGradeId(grade.id)
     }
   }
 
-  const handleSelectPlan = (planId) => {
-    if (planId === 'free' && user) {
-      setPage('dashboard')
-    } else if (!user) {
-      setPage('login')
-    }
-  }
-
-  const handleChangeGrade = async (gradeId) => {
-    setSelectedGradeId(gradeId)
-    if (user) {
+  const handleConfirmGradeAndNavigate = async (gradeLabel) => {
+    handleSelectGrade(gradeLabel)
+    const grade = grades.find(
+      (g) => g.label === gradeLabel || `${g.label} ${g.emoji}` === gradeLabel
+    )
+    if (grade && user) {
       try {
-        await updateProfileGrade(user.id, gradeId)
+        await updateProfileGrade(user.id, grade.id)
+        await refreshProfile()
       } catch { /* ignore */ }
     }
+    setPage('dashboard')
   }
 
-  const handleStartQuiz = async (unit) => {
+  // Unit select from dashboard
+  const handleSelectUnit = async (subject, unitSlug) => {
+    setSelectedSubject(subject)
     setError('')
+
+    // Find real unit from loaded units
+    const unit = units.find((u) => u.slug === unitSlug)
+    if (!unit) {
+      // Fallback: try to load questions with slug directly
+      try {
+        const questions = await fetchQuestions(unitSlug)
+        setCurrentUnit({ slug: unitSlug, title: unitSlug })
+        setCurrentQuestions(questions)
+        setQuizAnswers([])
+        setPage('quiz')
+      } catch (err) {
+        setError(err.message || '問題取得に失敗しました')
+      }
+      return
+    }
+
     try {
       const questions = await fetchQuestions(unit.slug)
       setCurrentUnit(unit)
@@ -140,14 +157,13 @@ export default function App() {
     }
   }
 
-  const handleFinishQuiz = async (answers) => {
+  // Quiz complete
+  const handleQuizComplete = async (answers) => {
     setQuizAnswers(answers)
     setPage('results')
 
     if (!user || !currentUnit) return
-
     try {
-      // 各解答をログに保存
       for (const answer of answers) {
         await saveAnswerLog(
           user.id,
@@ -157,95 +173,116 @@ export default function App() {
           answer.isCorrect,
         )
       }
-      // 利用回数をインクリメント
       await incrementUsage(user.id)
     } catch {
-      // ログ保存失敗は結果表示をブロックしない
+      // Don't block results display
     }
   }
 
-  // ─── 描画 ─────────────────────────
-
+  // ─── Render ─────────────────────────
   if (authLoading) {
     return (
-      <div className="app">
-        <div className="page-wrap narrow">
-          <p className="empty">読み込み中...</p>
-        </div>
+      <div className="loading-screen">
+        <p>読み込み中...</p>
       </div>
     )
   }
 
+  const renderPage = () => {
+    switch (page) {
+      case 'landing':
+        return <LandingPage onNavigate={handleNavigate} />
+
+      case 'login':
+        return <LoginPage onNavigate={handleNavigate} />
+
+      case 'gradeSelect':
+        return (
+          <GradeSelectPage
+            onNavigate={(p) => {
+              if (p === 'dashboard') {
+                // GradeSelectPage calls onNavigate("dashboard") after selecting
+                setPage('dashboard')
+              } else {
+                setPage(p)
+              }
+            }}
+            onSelectGrade={handleConfirmGradeAndNavigate}
+          />
+        )
+
+      case 'pricing':
+        return <PricingPage onNavigate={handleNavigate} isLoggedIn={isLoggedIn} />
+
+      case 'dashboard':
+        return (
+          <DashboardPage
+            onNavigate={handleNavigate}
+            grade={selectedGradeLabel}
+            onSelectUnit={handleSelectUnit}
+            units={units}
+            stats={stats}
+            usageToday={usageToday}
+            dailyLimit={dailyLimit}
+            userName={profile?.display_name || ''}
+          />
+        )
+
+      case 'quiz':
+        return (
+          <QuizPage
+            onNavigate={handleNavigate}
+            subject={selectedSubject}
+            onComplete={handleQuizComplete}
+          />
+        )
+
+      case 'results':
+        return (
+          <ResultsPage
+            onNavigate={handleNavigate}
+            subject={selectedSubject}
+            answers={quizAnswers}
+          />
+        )
+
+      case 'review':
+        return (
+          <ReviewPage
+            onNavigate={handleNavigate}
+            subject={selectedSubject}
+            answers={quizAnswers}
+          />
+        )
+
+      default:
+        return <LandingPage onNavigate={handleNavigate} />
+    }
+  }
+
   return (
-    <div className="app">
-      <Header page={page} onNavigate={setPage} selectedGradeLabel={selectedGradeLabel} />
+    <div className="relative min-h-screen" style={{ fontFamily: '"Noto Sans JP", sans-serif' }}>
+      <FloatingDecorations />
 
       {error && <div className="error-banner">{error}</div>}
 
       {dataLoading && page === 'dashboard' ? (
-        <div className="page-wrap narrow">
-          <p className="empty">読み込み中...</p>
+        <div className="loading-screen">
+          <p>読み込み中...</p>
         </div>
       ) : (
-        <>
-          {page === 'landing' && <LandingPage onNavigate={setPage} />}
-
-          {page === 'login' && <LoginPage />}
-
-          {page === 'grade-select' && (
-            <GradeSelectPage
-              grades={grades}
-              selectedGradeId={selectedGradeId}
-              onSelectGrade={handleSelectGrade}
-              onNext={handleConfirmGrade}
-            />
-          )}
-
-          {page === 'pricing' && (
-            <PricingPage
-              plans={plans}
-              onSelectPlan={handleSelectPlan}
-              onBack={() => setPage(user ? 'dashboard' : 'landing')}
-            />
-          )}
-
-          {page === 'dashboard' && (
-            <DashboardPage
-              units={units}
-              grades={grades}
-              selectedGradeId={selectedGradeId}
-              onChangeGrade={handleChangeGrade}
-              onStartQuiz={handleStartQuiz}
-              stats={stats}
-              usageToday={usageToday}
-              dailyLimit={dailyLimit}
-              onNavigate={setPage}
-            />
-          )}
-
-          {page === 'quiz' && (
-            <QuizPage
-              unit={currentUnit}
-              questions={currentQuestions}
-              onBack={() => setPage('dashboard')}
-              onFinish={handleFinishQuiz}
-            />
-          )}
-
-          {page === 'results' && (
-            <ResultsPage
-              unitTitle={currentUnit?.title || '演習'}
-              answers={quizAnswers}
-              onReview={() => setPage('review')}
-              onRetry={() => setPage('quiz')}
-              onBack={() => setPage('dashboard')}
-            />
-          )}
-
-          {page === 'review' && (
-            <ReviewPage answers={quizAnswers} onBack={() => setPage('dashboard')} />
-          )}
-        </>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={page}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative z-10"
+          >
+            {renderPage()}
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   )

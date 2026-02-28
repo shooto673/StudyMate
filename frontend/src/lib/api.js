@@ -6,9 +6,9 @@ const GRADES = [
   { id: 'e4', shortLabel: '小4', label: '小学4年生', emoji: '🌱', tagline: '近日公開', disabled: true },
   { id: 'e5', shortLabel: '小5', label: '小学5年生', emoji: '🌿', tagline: '近日公開', disabled: true },
   { id: 'e6', shortLabel: '小6', label: '小学6年生', emoji: '🍀', tagline: '近日公開', disabled: true },
-  { id: 'j1', shortLabel: '中1', label: '中学1年生', emoji: '📗', tagline: '英語対応中', disabled: false },
-  { id: 'j2', shortLabel: '中2', label: '中学2年生', emoji: '📘', tagline: '英語対応中', disabled: false },
-  { id: 'j3', shortLabel: '中3', label: '中学3年生', emoji: '📙', tagline: '英語対応中', disabled: false },
+  { id: 'j1', shortLabel: '中1', label: '中学1年生', emoji: '📗', tagline: '英語・数学対応中', disabled: false },
+  { id: 'j2', shortLabel: '中2', label: '中学2年生', emoji: '📘', tagline: '英語・数学対応中', disabled: false },
+  { id: 'j3', shortLabel: '中3', label: '中学3年生', emoji: '📙', tagline: '英語・数学対応中', disabled: false },
 ]
 
 const PLANS = [
@@ -31,7 +31,7 @@ export function getPlans() {
 export async function fetchUnits(gradeSlug) {
   let query = supabase
     .from('units')
-    .select('id, slug, title, grade, display_order, subject_id')
+    .select('id, slug, title, grade, display_order, subject_id, subjects(slug, name)')
     .order('display_order')
 
   if (gradeSlug) {
@@ -40,7 +40,13 @@ export async function fetchUnits(gradeSlug) {
 
   const { data, error } = await query
   if (error) throw error
-  return data || []
+
+  // Flatten subject info into unit object
+  return (data || []).map((u) => ({
+    ...u,
+    subject: u.subjects?.slug || 'english',
+    subjectName: u.subjects?.name || '英語',
+  }))
 }
 
 // ─── 問題（AI動的生成） ─────────────────

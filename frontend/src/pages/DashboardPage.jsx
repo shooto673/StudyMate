@@ -1,100 +1,319 @@
-import { useAuth } from '../contexts/AuthContext'
-import Mascot from '../components/Mascot'
-import ProgressRing from '../components/ProgressRing'
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { BarChart3, Target, Flame, ArrowRight, Medal } from "lucide-react"
+import Mascot from "../components/Mascot"
+import Header from "../components/Header"
+
+function useCountUp(target, duration = 1000) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    let startTime
+    let animationFrame
+
+    const animate = (currentTime) => {
+      if (!startTime) startTime = currentTime
+      const progress = Math.min((currentTime - startTime) / duration, 1)
+      setCount(Math.floor(progress * target))
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate)
+      }
+    }
+
+    animationFrame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationFrame)
+  }, [target, duration])
+
+  return count
+}
 
 export default function DashboardPage({
-  units,
-  grades,
-  selectedGradeId,
-  onChangeGrade,
-  onStartQuiz,
-  stats,
-  usageToday,
-  dailyLimit,
   onNavigate,
+  grade,
+  onSelectUnit,
+  units = [],
+  stats = { totalAnswered: 0, accuracy: 0, streakDays: 0 },
+  usageToday = 0,
+  dailyLimit = 10,
+  userName = '',
 }) {
-  const { profile, planTier } = useAuth()
+  const [selectedSubject, setSelectedSubject] = useState("english")
 
-  const limitReached = planTier === 'free' && usageToday >= dailyLimit
+  const totalAnswers = useCountUp(stats.totalAnswered)
+  const accuracy = useCountUp(stats.accuracy)
+  const streak = useCountUp(stats.streakDays)
+
+  // Filter units by selected subject
+  const filteredUnits = units.filter((u) => u.subject === selectedSubject)
+  const subjectColor = selectedSubject === "english" ? "var(--english)" : "var(--math)"
+
+  // Subject icon
+  const subjectIcon = selectedSubject === "english" ? "🔤" : "🔢"
+
+  // Usage percentage
+  const usagePercent = dailyLimit > 0 ? Math.min((usageToday / dailyLimit) * 100, 100) : 0
 
   return (
-    <div className="page-wrap wide">
-      <div className="hero-card">
-        <Mascot size={64} />
-        <div>
-          <h2>{profile?.display_name || 'ユーザー'}さん、がんばろう!</h2>
-          <p>単元を選んで演習を開始してください。</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[var(--bg)]">
+      <Header isLoggedIn grade={grade} onNavigate={onNavigate} />
 
-      <div className="stats-row">
-        <div className="stat">
-          <strong>{stats.totalAnswered}</strong>
-          <span>解答数</span>
-        </div>
-        <div className="stat">
-          <strong>{stats.accuracy}%</strong>
-          <span>正答率</span>
-        </div>
-        <div className="stat">
-          <strong>{stats.streakDays}</strong>
-          <span>連続日数</span>
-        </div>
-      </div>
-
-      {planTier === 'free' && (
-        <div className="usage-bar">
-          <div className="usage-text">
-            今日の利用: {usageToday} / {dailyLimit} 問
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Welcome Card */}
+        <motion.div
+          className="bg-white rounded-3xl p-6 shadow-[var(--card-shadow)] mb-6 overflow-hidden relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              background: "linear-gradient(135deg, var(--bg-sub) 0%, transparent 50%)",
+            }}
+          />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h1 className="text-2xl font-extrabold text-[var(--text)] mb-2">
+                おかえり{userName ? `、${userName}さん` : ''}！👋
+              </h1>
+              <p className="text-[var(--text-sub)]">今日は何を勉強する？</p>
+            </div>
+            <Mascot mood="studying" size="md" message="今日は何を勉強する？" />
           </div>
-          <div className="usage-track">
-            <div
-              className="usage-fill"
-              style={{ width: `${Math.min(100, (usageToday / dailyLimit) * 100)}%` }}
+        </motion.div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {/* Total Answers */}
+          <motion.div
+            className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-[var(--primary)]" />
+              </div>
+              <span className="text-sm text-[var(--text-sub)]">総回答数</span>
+            </div>
+            <div className="text-3xl font-extrabold text-[var(--text)]">
+              {totalAnswers}問
+            </div>
+          </motion.div>
+
+          {/* Accuracy */}
+          <motion.div
+            className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-[var(--success-light)] flex items-center justify-center">
+                <Target className="w-5 h-5 text-[var(--success)]" />
+              </div>
+              <span className="text-sm text-[var(--text-sub)]">正答率</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative w-12 h-12">
+                <svg className="w-12 h-12 transform -rotate-90">
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    stroke="var(--success-light)"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    stroke="var(--success)"
+                    strokeWidth="4"
+                    fill="none"
+                    strokeDasharray={`${accuracy * 1.256} 126`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <span className="text-3xl font-extrabold text-[var(--text)]">{accuracy}%</span>
+            </div>
+          </motion.div>
+
+          {/* Streak */}
+          <motion.div
+            className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-full bg-[var(--accent-light)] flex items-center justify-center">
+                <Flame className="w-5 h-5 text-[var(--accent)]" />
+              </div>
+              <span className="text-sm text-[var(--text-sub)]">連続日数</span>
+            </div>
+            <div className="text-3xl font-extrabold text-[var(--text)] flex items-center gap-1">
+              {streak}日
+              <motion.span
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
+              >
+                🔥
+              </motion.span>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Usage bar */}
+        <motion.div
+          className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)] mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-[var(--text)]">今日の学習</span>
+            <span className="text-sm text-[var(--text-sub)]">{usageToday} / {dailyLimit}問</span>
+          </div>
+          <div className="h-3 bg-[var(--bg-sub)] rounded-full overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: "linear-gradient(90deg, var(--primary), var(--english))" }}
+              initial={{ width: 0 }}
+              animate={{ width: `${usagePercent}%` }}
+              transition={{ duration: 0.8, type: "spring" }}
             />
           </div>
-          {limitReached && (
-            <div className="usage-limit-msg">
-              今日の無料利用上限に達しました。
-              <button className="btn-link" onClick={() => onNavigate('pricing')}>
-                プランをアップグレード
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        </motion.div>
 
-      <div className="tabs">
-        {grades
-          .filter((g) => !g.disabled)
-          .map((g) => (
-            <button
-              key={g.id}
-              className={`tab ${selectedGradeId === g.id ? 'active' : ''}`}
-              onClick={() => onChangeGrade(g.id)}
-            >
-              {g.shortLabel}
-            </button>
-          ))}
-      </div>
-
-      <div className="units">
-        {units.length === 0 && <div className="empty">単元データがありません。</div>}
-        {units.map((unit) => (
+        {/* Subject Tabs */}
+        <motion.div
+          className="flex gap-3 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
           <button
-            key={unit.id}
-            className="unit-card"
-            onClick={() => onStartQuiz(unit)}
-            disabled={limitReached}
+            onClick={() => setSelectedSubject("english")}
+            className={`
+              px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200
+              ${selectedSubject === "english"
+                ? "bg-[var(--english)] text-white shadow-lg"
+                : "bg-white border border-[var(--card-border)] text-[var(--text-sub)] hover:border-[var(--english)]"
+              }
+            `}
           >
-            <ProgressRing value={unit.progress || 0} />
-            <div className="unit-main">
-              <div className="unit-grade">{unit.grade?.replace('j', '中')}</div>
-              <h3>{unit.title}</h3>
-            </div>
-            <span className="arrow">›</span>
+            <span>🔤</span> 英語
           </button>
-        ))}
+          <button
+            onClick={() => setSelectedSubject("math")}
+            className={`
+              px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200
+              ${selectedSubject === "math"
+                ? "bg-[var(--math)] text-white shadow-lg"
+                : "bg-white border border-[var(--card-border)] text-[var(--text-sub)] hover:border-[var(--math)]"
+              }
+            `}
+          >
+            <span>🔢</span> 数学
+          </button>
+        </motion.div>
+
+        {/* Unit Cards */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedSubject}
+            className="grid md:grid-cols-2 gap-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {filteredUnits.length === 0 ? (
+              <motion.div
+                className="col-span-2 text-center py-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <Mascot mood="thinking" size="sm" message="この学年にはまだ単元がないよ" />
+              </motion.div>
+            ) : (
+              filteredUnits.map((unit, i) => (
+                <motion.div
+                  key={unit.slug}
+                  className="relative bg-white rounded-2xl p-5 shadow-[var(--card-shadow)] hover:-translate-y-1 hover:shadow-[var(--card-hover-shadow)] transition-all duration-200"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.3 }}
+                >
+                  {/* Subject indicator */}
+                  <div
+                    className="absolute top-4 left-4 w-2 h-2 rounded-full"
+                    style={{ backgroundColor: subjectColor }}
+                  />
+
+                  {/* Gold medal for high progress */}
+                  {(unit.progress || 0) >= 80 && (
+                    <motion.div
+                      className="absolute top-3 right-3"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.3 }}
+                    >
+                      <Medal className="w-6 h-6 text-[var(--warning)]" />
+                    </motion.div>
+                  )}
+
+                  <h3 className="text-lg font-bold text-[var(--text)] mb-3 ml-4">
+                    {unit.title}
+                  </h3>
+
+                  {/* Progress bar */}
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-[var(--text-sub)]">進捗</span>
+                      <span className="text-xs text-[var(--text-sub)]">{unit.progress || 0}%</span>
+                    </div>
+                    <div className="h-2 bg-[var(--bg-sub)] rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: subjectColor }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${unit.progress || 0}%` }}
+                        transition={{ duration: 0.8, type: "spring", delay: i * 0.1 }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Study button */}
+                  <button
+                    onClick={() => onSelectUnit(unit.subject || selectedSubject, unit.slug)}
+                    className="flex items-center gap-1 text-sm font-semibold transition-colors"
+                    style={{ color: subjectColor }}
+                  >
+                    学習する
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              ))
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Footer link */}
+        <div className="text-center mt-12">
+          <button
+            onClick={() => onNavigate("pricing")}
+            className="text-[var(--primary)] font-semibold hover:underline flex items-center gap-1 mx-auto"
+          >
+            プランを変更
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   )
