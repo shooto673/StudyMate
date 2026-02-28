@@ -7,7 +7,7 @@ const colors = [
   "var(--accent)",
 ]
 
-export default function FloatingDecorations() {
+export function FloatingDecorations() {
   const [shapes, setShapes] = useState([])
 
   useEffect(() => {

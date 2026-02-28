@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BarChart3, Target, Flame, ArrowRight, Medal } from "lucide-react"
-import Mascot from "../components/Mascot"
-import Header from "../components/Header"
+import { Mascot } from "../components/Mascot"
+import { Header } from "../components/Header"
+
+const englishUnits = [
+  { slug: "j1-be", title: "be動詞", subject: "english", icon: "🔤", progress: 80 },
+  { slug: "j1-do", title: "一般動詞", subject: "english", icon: "🔤", progress: 45 },
+  { slug: "j1-neg", title: "疑問文・否定文", subject: "english", icon: "🔤", progress: 0 },
+]
+
+const mathUnits = [
+  { slug: "j1-positive-negative", title: "正負の数", subject: "math", icon: "🔢", progress: 60 },
+  { slug: "j1-equations", title: "一次方程式", subject: "math", icon: "🔢", progress: 25 },
+  { slug: "j1-geometry", title: "平面図形", subject: "math", icon: "🔢", progress: 0 },
+]
 
 function useCountUp(target, duration = 1000) {
   const [count, setCount] = useState(0)
@@ -28,31 +40,28 @@ function useCountUp(target, duration = 1000) {
   return count
 }
 
-export default function DashboardPage({
-  onNavigate,
-  grade,
-  onSelectUnit,
-  units = [],
-  stats = { totalAnswered: 0, accuracy: 0, streakDays: 0 },
-  usageToday = 0,
-  dailyLimit = 10,
-  userName = '',
-}) {
+export function DashboardPage({ onNavigate, grade, onSelectUnit, units: unitsProp, stats, usageToday, dailyLimit, userName }) {
   const [selectedSubject, setSelectedSubject] = useState("english")
 
-  const totalAnswers = useCountUp(stats.totalAnswered)
-  const accuracy = useCountUp(stats.accuracy)
-  const streak = useCountUp(stats.streakDays)
+  const defaultStats = { totalAnswers: 42, accuracy: 78, streak: 3 }
+  const resolvedStats = stats || defaultStats
 
-  // Filter units by selected subject
-  const filteredUnits = units.filter((u) => u.subject === selectedSubject)
+  const totalAnswers = useCountUp(resolvedStats.totalAnswers)
+  const accuracy = useCountUp(resolvedStats.accuracy)
+  const streak = useCountUp(resolvedStats.streak)
+
+  const resolvedUsageToday = usageToday != null ? usageToday : 3
+  const resolvedDailyLimit = dailyLimit != null ? dailyLimit : 10
+  const resolvedUserName = userName || "ユーザー"
+
+  const hasUnitsProp = Array.isArray(unitsProp) && unitsProp.length > 0
+
+  const displayUnits = hasUnitsProp
+    ? unitsProp.filter(unit => unit.subject === selectedSubject)
+    : selectedSubject === "english" ? englishUnits : mathUnits
+
   const subjectColor = selectedSubject === "english" ? "var(--english)" : "var(--math)"
-
-  // Subject icon
-  const subjectIcon = selectedSubject === "english" ? "🔤" : "🔢"
-
-  // Usage percentage
-  const usagePercent = dailyLimit > 0 ? Math.min((usageToday / dailyLimit) * 100, 100) : 0
+  const subjectLightColor = selectedSubject === "english" ? "var(--english-light)" : "var(--math-light)"
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -75,7 +84,7 @@ export default function DashboardPage({
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <h1 className="text-2xl font-extrabold text-[var(--text)] mb-2">
-                おかえり{userName ? `、${userName}さん` : ''}！👋
+                おかえり、{resolvedUserName}さん！👋
               </h1>
               <p className="text-[var(--text-sub)]">今日は何を勉強する？</p>
             </div>
@@ -177,14 +186,14 @@ export default function DashboardPage({
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-[var(--text)]">今日の学習</span>
-            <span className="text-sm text-[var(--text-sub)]">{usageToday} / {dailyLimit}問</span>
+            <span className="text-sm text-[var(--text-sub)]">{resolvedUsageToday} / {resolvedDailyLimit}問</span>
           </div>
           <div className="h-3 bg-[var(--bg-sub)] rounded-full overflow-hidden">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: "linear-gradient(90deg, var(--primary), var(--english))" }}
+              style={{ background: `linear-gradient(90deg, var(--primary), var(--english))` }}
               initial={{ width: 0 }}
-              animate={{ width: `${usagePercent}%` }}
+              animate={{ width: `${resolvedDailyLimit > 0 ? (resolvedUsageToday / resolvedDailyLimit) * 100 : 0}%` }}
               transition={{ duration: 0.8, type: "spring" }}
             />
           </div>
@@ -233,74 +242,64 @@ export default function DashboardPage({
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            {filteredUnits.length === 0 ? (
+            {displayUnits.map((unit, i) => (
               <motion.div
-                className="col-span-2 text-center py-12"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                key={unit.slug}
+                className="relative bg-white rounded-2xl p-5 shadow-[var(--card-shadow)] hover:-translate-y-1 hover:shadow-[var(--card-hover-shadow)] transition-all duration-200"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.3 }}
               >
-                <Mascot mood="thinking" size="sm" message="この学年にはまだ単元がないよ" />
-              </motion.div>
-            ) : (
-              filteredUnits.map((unit, i) => (
-                <motion.div
-                  key={unit.slug}
-                  className="relative bg-white rounded-2xl p-5 shadow-[var(--card-shadow)] hover:-translate-y-1 hover:shadow-[var(--card-hover-shadow)] transition-all duration-200"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1, duration: 0.3 }}
-                >
-                  {/* Subject indicator */}
-                  <div
-                    className="absolute top-4 left-4 w-2 h-2 rounded-full"
-                    style={{ backgroundColor: subjectColor }}
-                  />
+                {/* Subject indicator */}
+                <div
+                  className="absolute top-4 left-4 w-2 h-2 rounded-full"
+                  style={{ backgroundColor: subjectColor }}
+                />
 
-                  {/* Gold medal for high progress */}
-                  {(unit.progress || 0) >= 80 && (
-                    <motion.div
-                      className="absolute top-3 right-3"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", delay: 0.3 }}
-                    >
-                      <Medal className="w-6 h-6 text-[var(--warning)]" />
-                    </motion.div>
-                  )}
-
-                  <h3 className="text-lg font-bold text-[var(--text)] mb-3 ml-4">
-                    {unit.title}
-                  </h3>
-
-                  {/* Progress bar */}
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-[var(--text-sub)]">進捗</span>
-                      <span className="text-xs text-[var(--text-sub)]">{unit.progress || 0}%</span>
-                    </div>
-                    <div className="h-2 bg-[var(--bg-sub)] rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: subjectColor }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${unit.progress || 0}%` }}
-                        transition={{ duration: 0.8, type: "spring", delay: i * 0.1 }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Study button */}
-                  <button
-                    onClick={() => onSelectUnit(unit.subject || selectedSubject, unit.slug)}
-                    className="flex items-center gap-1 text-sm font-semibold transition-colors"
-                    style={{ color: subjectColor }}
+                {/* Gold medal for high progress */}
+                {unit.progress >= 80 && (
+                  <motion.div
+                    className="absolute top-3 right-3"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", delay: 0.3 }}
                   >
-                    学習する
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              ))
-            )}
+                    <Medal className="w-6 h-6 text-[var(--warning)]" />
+                  </motion.div>
+                )}
+
+                <h3 className="text-lg font-bold text-[var(--text)] mb-3 ml-4">
+                  {unit.title}
+                </h3>
+
+                {/* Progress bar */}
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-[var(--text-sub)]">進捗</span>
+                    <span className="text-xs text-[var(--text-sub)]">{unit.progress}%</span>
+                  </div>
+                  <div className="h-2 bg-[var(--bg-sub)] rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: subjectColor }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${unit.progress}%` }}
+                      transition={{ duration: 0.8, type: "spring", delay: i * 0.1 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Study button */}
+                <button
+                  onClick={() => onSelectUnit(unit.subject || selectedSubject, unit.slug)}
+                  className="flex items-center gap-1 text-sm font-semibold transition-colors"
+                  style={{ color: subjectColor }}
+                >
+                  学習する
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
           </motion.div>
         </AnimatePresence>
 

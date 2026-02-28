@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from './contexts/AuthContext'
-import FloatingDecorations from './components/FloatingDecorations'
-import LandingPage from './pages/LandingPage'
-import LoginPage from './pages/LoginPage'
-import GradeSelectPage from './pages/GradeSelectPage'
-import PricingPage from './pages/PricingPage'
-import DashboardPage from './pages/DashboardPage'
-import QuizPage from './pages/QuizPage'
-import ResultsPage from './pages/ResultsPage'
-import ReviewPage from './pages/ReviewPage'
+import { FloatingDecorations } from './components/FloatingDecorations'
+import { LandingPage } from './pages/LandingPage'
+import { LoginPage } from './pages/LoginPage'
+import { GradeSelectPage } from './pages/GradeSelectPage'
+import { PricingPage } from './pages/PricingPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { QuizPage } from './pages/QuizPage'
+import { ResultsPage } from './pages/ResultsPage'
+import { ReviewPage } from './pages/ReviewPage'
 import {
   getGrades,
   fetchUnits,
@@ -27,7 +27,7 @@ import './styles/app.css'
 const grades = getGrades()
 
 export default function App() {
-  const { user, profile, planTier, loading: authLoading, refreshProfile } = useAuth()
+  const { user, profile, planTier, loading: authLoading, refreshProfile, signInWithGoogle } = useAuth()
 
   const [page, setPage] = useState('landing')
   const [selectedGradeId, setSelectedGradeId] = useState(null)
@@ -194,7 +194,18 @@ export default function App() {
         return <LandingPage onNavigate={handleNavigate} />
 
       case 'login':
-        return <LoginPage onNavigate={handleNavigate} />
+        return (
+          <LoginPage
+            onNavigate={handleNavigate}
+            onGoogleLogin={async () => {
+              try {
+                await signInWithGoogle()
+              } catch (err) {
+                setError(err.message || 'ログインに失敗しました')
+              }
+            }}
+          />
+        )
 
       case 'gradeSelect':
         return (
@@ -234,6 +245,7 @@ export default function App() {
             onNavigate={handleNavigate}
             subject={selectedSubject}
             onComplete={handleQuizComplete}
+            questions={currentQuestions}
           />
         )
 

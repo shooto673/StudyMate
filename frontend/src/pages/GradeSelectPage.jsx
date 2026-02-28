@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Lock, Check, ArrowRight } from "lucide-react"
-import Mascot from "../components/Mascot"
+import { Mascot } from "../components/Mascot"
 
 const grades = [
   { id: "e4", label: "小学4年生", emoji: "🌱", available: false, subjects: "近日公開" },
@@ -12,7 +12,7 @@ const grades = [
   { id: "j3", label: "中学3年生", emoji: "📙", available: true, subjects: "英語・数学対応中" },
 ]
 
-export default function GradeSelectPage({ onNavigate, onSelectGrade }) {
+export function GradeSelectPage({ onNavigate, onSelectGrade }) {
   const [selectedGrade, setSelectedGrade] = useState(null)
 
   const handleNext = () => {
@@ -33,17 +33,14 @@ export default function GradeSelectPage({ onNavigate, onSelectGrade }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {/* Mascot */}
         <div className="flex justify-center mb-8">
           <Mascot mood="normal" size="md" message="学年を教えてね！" />
         </div>
 
-        {/* Title */}
         <h1 className="text-2xl md:text-3xl font-extrabold text-center text-[var(--text)] mb-8">
           学年を選んでください
         </h1>
 
-        {/* Grade Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           {grades.map((grade, i) => (
             <motion.button
@@ -63,7 +60,6 @@ export default function GradeSelectPage({ onNavigate, onSelectGrade }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.3 }}
             >
-              {/* Selected checkmark */}
               {selectedGrade === grade.id && (
                 <motion.div
                   className="absolute top-3 right-3 w-6 h-6 bg-[var(--primary)] rounded-full flex items-center justify-center"
@@ -75,7 +71,6 @@ export default function GradeSelectPage({ onNavigate, onSelectGrade }) {
                 </motion.div>
               )}
 
-              {/* Locked badge */}
               {!grade.available && (
                 <div className="absolute top-3 right-3">
                   <Lock className="w-4 h-4 text-gray-400" />
@@ -91,7 +86,6 @@ export default function GradeSelectPage({ onNavigate, onSelectGrade }) {
           ))}
         </div>
 
-        {/* Next Button */}
         <div className="flex justify-center">
           <motion.button
             onClick={handleNext}

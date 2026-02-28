@@ -18,7 +18,7 @@ const sizeMap = {
   xl: 200,
 }
 
-export default function Mascot({ mood = "normal", size = "md", message, className = "" }) {
+export function Mascot({ mood = "normal", size = "md", message, className = "" }) {
   const imageSize = sizeMap[size]
 
   return (
@@ -32,9 +32,8 @@ export default function Mascot({ mood = "normal", size = "md", message, classNam
         <img
           src={moodImages[mood]}
           alt="StudyMateくん"
-          width={imageSize}
-          height={imageSize}
-          style={{ objectFit: "contain", width: imageSize, height: imageSize }}
+          className="object-contain"
+          style={{ width: imageSize, height: imageSize }}
         />
       </motion.div>
 

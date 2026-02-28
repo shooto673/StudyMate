@@ -10,7 +10,7 @@ const colors = [
   "var(--warning)",
 ]
 
-export default function ConfettiEffect({ isActive, onComplete }) {
+export function ConfettiEffect({ isActive, onComplete }) {
   const [confetti, setConfetti] = useState([])
 
   useEffect(() => {

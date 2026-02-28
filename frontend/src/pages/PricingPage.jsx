@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import { Check, ArrowLeft, Star, Crown } from "lucide-react"
-import Header from "../components/Header"
+import { Header } from "../components/Header"
 
 const plans = [
   {
@@ -8,11 +8,7 @@ const plans = [
     name: "Free",
     price: 0,
     limit: "10問/日",
-    features: [
-      "基本フィードバック",
-      "履歴保存",
-      "英語・数学全単元",
-    ],
+    features: ["基本フィードバック", "履歴保存", "英語・数学全単元"],
     badge: null,
     highlight: false,
     buttonText: "現在のプラン",
@@ -23,13 +19,7 @@ const plans = [
     name: "Light",
     price: 500,
     limit: "50問/日",
-    features: [
-      "Freeの全機能",
-      "問題数上限アップ",
-      "履歴分析",
-      "広告なし",
-      "復習キュー",
-    ],
+    features: ["Freeの全機能", "問題数上限アップ", "履歴分析", "広告なし", "復習キュー"],
     badge: null,
     highlight: false,
     buttonText: "このプランにする",
@@ -40,14 +30,8 @@ const plans = [
     name: "Standard",
     price: 799,
     limit: "100問/日",
-    features: [
-      "Lightの全機能",
-      "詳細AIフィードバック",
-      "弱点分析",
-      "復習提案",
-      "学習レポート",
-    ],
-    badge: { text: "おすすめ", iconType: "star" },
+    features: ["Lightの全機能", "詳細AIフィードバック", "弱点分析", "復習提案", "学習レポート"],
+    badge: { text: "おすすめ", icon: <Star className="w-3 h-3" /> },
     highlight: true,
     buttonText: "このプランにする",
     disabled: false,
@@ -57,14 +41,8 @@ const plans = [
     name: "Premium",
     price: 999,
     limit: "200問/日",
-    features: [
-      "Standardの全機能",
-      "週次レポート",
-      "優先サポート",
-      "保護者向け要約",
-      "カスタム学習プラン",
-    ],
-    badge: { text: "プレミアム", iconType: "crown" },
+    features: ["Standardの全機能", "週次レポート", "優先サポート", "保護者向け要約", "カスタム学習プラン"],
+    badge: { text: "プレミアム", icon: <Crown className="w-3 h-3" /> },
     highlight: false,
     borderColor: "var(--warning)",
     buttonText: "このプランにする",
@@ -72,19 +50,12 @@ const plans = [
   },
 ]
 
-function BadgeIcon({ type }) {
-  if (type === "star") return <Star className="w-3 h-3" />
-  if (type === "crown") return <Crown className="w-3 h-3" />
-  return null
-}
-
-export default function PricingPage({ onNavigate, isLoggedIn = false }) {
+export function PricingPage({ onNavigate, isLoggedIn = false }) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Header isLoggedIn={isLoggedIn} onNavigate={onNavigate} />
 
       <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* Title */}
         <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -94,12 +65,9 @@ export default function PricingPage({ onNavigate, isLoggedIn = false }) {
           <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--text)] mb-4">
             あなたにぴったりのプランを
           </h1>
-          <p className="text-[var(--text-sub)]">
-            すべてのプランで英語・数学が学べます
-          </p>
+          <p className="text-[var(--text-sub)]">すべてのプランで英語・数学が学べます</p>
         </motion.div>
 
-        {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, i) => (
             <motion.div
@@ -114,43 +82,30 @@ export default function PricingPage({ onNavigate, isLoggedIn = false }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.4 }}
             >
-              {/* Badge */}
               {plan.badge && (
-                <div
-                  className={`
-                    absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1
-                    ${plan.highlight ? "bg-[var(--primary)]" : "bg-[var(--warning)]"}
-                  `}
-                >
-                  <BadgeIcon type={plan.badge.iconType} />
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1 ${
+                  plan.highlight ? "bg-[var(--primary)]" : "bg-[var(--warning)]"
+                }`}>
+                  {plan.badge.icon}
                   {plan.badge.text}
                 </div>
               )}
 
-              {/* Plan name */}
-              <h2 className="text-xl font-extrabold text-[var(--text)] mb-2 mt-2">
-                {plan.name}
-              </h2>
+              <h2 className="text-xl font-extrabold text-[var(--text)] mb-2 mt-2">{plan.name}</h2>
 
-              {/* Price */}
               <div className="mb-4">
-                <span className="text-4xl font-extrabold text-[var(--text)]">
-                  ¥{plan.price.toLocaleString()}
-                </span>
+                <span className="text-4xl font-extrabold text-[var(--text)]">¥{plan.price.toLocaleString()}</span>
                 <span className="text-[var(--text-sub)] text-sm">/月</span>
               </div>
 
-              {/* Limit badge */}
               <div className="inline-block px-3 py-1 bg-[var(--primary-light)] text-[var(--primary)] rounded-full text-xs font-semibold mb-4">
                 {plan.limit}
               </div>
 
-              {/* Subject badge */}
               <div className="px-3 py-1 bg-[var(--bg-sub)] text-[var(--text-sub)] rounded-full text-xs font-medium mb-4 inline-block ml-2">
                 英語・数学 全教科対応
               </div>
 
-              {/* Features */}
               <ul className="space-y-3 mb-6">
                 {plan.features.map((feature, j) => (
                   <li key={j} className="flex items-start gap-2 text-sm text-[var(--text)]">
@@ -160,16 +115,13 @@ export default function PricingPage({ onNavigate, isLoggedIn = false }) {
                 ))}
               </ul>
 
-              {/* Button */}
               <button
                 disabled={plan.disabled}
-                className={`
-                  w-full py-3 rounded-xl font-bold text-sm transition-all duration-200
-                  ${plan.disabled
+                className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
+                  plan.disabled
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : "bg-[var(--primary)] text-white hover:shadow-lg hover:scale-105"
-                  }
-                `}
+                }`}
               >
                 {plan.buttonText}
               </button>
@@ -177,7 +129,6 @@ export default function PricingPage({ onNavigate, isLoggedIn = false }) {
           ))}
         </div>
 
-        {/* Back link */}
         <div className="text-center mt-12">
           <button
             onClick={() => onNavigate("landing")}

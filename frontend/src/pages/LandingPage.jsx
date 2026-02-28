@@ -1,9 +1,9 @@
 import { motion } from "framer-motion"
 import { CheckCircle, Sparkles, Zap, Trophy, ArrowRight } from "lucide-react"
-import Mascot from "../components/Mascot"
-import Header from "../components/Header"
+import { Mascot } from "../components/Mascot"
+import { Header } from "../components/Header"
 
-export default function LandingPage({ onNavigate }) {
+export function LandingPage({ onNavigate }) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Header onNavigate={onNavigate} />
@@ -170,6 +170,7 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
+      {/* Bottom CTA */}
       <section className="py-16 bg-[var(--bg-sub)]">
         <div className="text-center">
           <button
