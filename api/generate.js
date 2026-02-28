@@ -142,10 +142,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ questions: validated })
   } catch (err) {
     console.error('AI generation error:', err)
-    return res.status(500).json({
-      error: 'Failed to generate questions',
-      detail: err?.message || String(err),
-      status: err?.status,
-    })
+    return res.status(500).json({ error: 'Failed to generate questions' })
   }
 }
