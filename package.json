@@ -6,6 +6,10 @@
     "build": "npm --prefix frontend run build",
     "preview": "npm --prefix frontend run preview"
   },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "stripe": "^17.5.0"
+  },
   "devDependencies": {
     "puppeteer": "^24.37.5"
   }
