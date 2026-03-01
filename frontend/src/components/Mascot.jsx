@@ -1,6 +1,7 @@
 import { motion } from "framer-motion"
 
-const moodImages = {
+// StudyMateくん（青いフクロウ）
+const mascotImages = {
   normal: "/mascots/mascot-normal.png",
   happy: "/mascots/mascot-happy.png",
   thinking: "/mascots/mascot-thinking.png",
@@ -11,6 +12,18 @@ const moodImages = {
   sleeping: "/mascots/mascot-sleeping.png",
 }
 
+// モナちゃん（ピンク）
+const monaImages = {
+  normal: "/mascots/mona-normal.png",
+  happy: "/mascots/mona-happy.png",
+  thinking: "/mascots/mona-thinking.png",
+  sad: "/mascots/mona-sad.png",
+  cheering: "/mascots/mona-cheering.png",
+  surprised: "/mascots/mona-surprised.png",
+  studying: "/mascots/mona-studying.png",
+  sleeping: "/mascots/mona-sleeping.png",
+}
+
 const sizeMap = {
   sm: 48,
   md: 80,
@@ -18,8 +31,10 @@ const sizeMap = {
   xl: 200,
 }
 
-export function Mascot({ mood = "normal", size = "md", message, className = "" }) {
+export function Mascot({ mood = "normal", size = "md", character = "mascot", message, className = "" }) {
   const imageSize = sizeMap[size]
+  const images = character === "mona" ? monaImages : mascotImages
+  const altText = character === "mona" ? "モナちゃん" : "StudyMateくん"
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
@@ -30,8 +45,8 @@ export function Mascot({ mood = "normal", size = "md", message, className = "" }
         transition={{ duration: 0.3, type: "spring" }}
       >
         <img
-          src={moodImages[mood]}
-          alt="StudyMateくん"
+          src={images[mood]}
+          alt={altText}
           className="object-contain"
           style={{ width: imageSize, height: imageSize }}
         />
