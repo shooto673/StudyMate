@@ -1,144 +1,130 @@
 import { motion } from "framer-motion"
-import { Check, ArrowLeft, Star, Crown } from "lucide-react"
+import { Check, Crown, Star } from "lucide-react"
 import { Header } from "../components/Header"
+import { FloatingDecorations } from "../components/FloatingDecorations"
+import { Mascot } from "../components/Mascot"
 
 const plans = [
   {
     id: "free",
     name: "Free",
     price: 0,
-    limit: "10問/日",
-    features: ["基本フィードバック", "履歴保存", "英語・数学全単元"],
+    questions: 10,
     badge: null,
+    features: ["基本フィードバック", "履歴保存", "全単元アクセス"],
     highlight: false,
-    buttonText: "現在のプラン",
-    disabled: true,
   },
   {
     id: "light",
     name: "Light",
     price: 500,
-    limit: "50問/日",
-    features: ["Freeの全機能", "問題数上限アップ", "履歴分析", "広告なし", "復習キュー"],
+    questions: 50,
     badge: null,
+    features: ["問題数UP", "履歴分析", "広告なし", "復習キュー"],
     highlight: false,
-    buttonText: "このプランにする",
-    disabled: false,
   },
   {
     id: "standard",
     name: "Standard",
     price: 799,
-    limit: "100問/日",
-    features: ["Lightの全機能", "詳細AIフィードバック", "弱点分析", "復習提案", "学習レポート"],
-    badge: { text: "おすすめ", icon: <Star className="w-3 h-3" /> },
+    questions: 100,
+    badge: "おすすめ",
+    features: ["詳細AIフィードバック", "弱点分析", "復習提案", "学習レポート"],
     highlight: true,
-    buttonText: "このプランにする",
-    disabled: false,
   },
   {
     id: "premium",
     name: "Premium",
     price: 999,
-    limit: "200問/日",
-    features: ["Standardの全機能", "週次レポート", "優先サポート", "保護者向け要約", "カスタム学習プラン"],
-    badge: { text: "プレミアム", icon: <Crown className="w-3 h-3" /> },
+    questions: 200,
+    badge: "プレミアム",
+    features: ["週次レポート", "優先サポート", "保護者向け要約", "カスタム学習プラン"],
     highlight: false,
-    borderColor: "var(--warning)",
-    buttonText: "このプランにする",
-    disabled: false,
   },
 ]
 
 export function PricingPage({ onNavigate, isLoggedIn = false }) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <FloatingDecorations />
       <Header isLoggedIn={isLoggedIn} onNavigate={onNavigate} />
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--text)] mb-4">
-            あなたにぴったりのプランを
-          </h1>
-          <p className="text-[var(--text-sub)]">すべてのプランで英語・数学が学べます</p>
+      <main className="mx-auto max-w-6xl px-4 py-12">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
+          <h1 className="mb-4 text-3xl font-bold text-[var(--text)] md:text-4xl">料金プラン</h1>
+          <p className="text-[var(--text-sub)]">あなたにぴったりのプランを選んでください</p>
+          <div className="mt-6 flex justify-center">
+            <Mascot character="mona" mood="happy" size="md" message="どのプランにする？" />
+          </div>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan, i) => (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {plans.map((plan, index) => (
             <motion.div
               key={plan.id}
-              className={`
-                relative bg-white rounded-3xl p-6 shadow-[var(--card-shadow)]
-                ${plan.highlight ? "scale-105 border-2 border-[var(--primary)] z-10" : ""}
-                ${plan.borderColor ? "border-2" : ""}
-              `}
-              style={plan.borderColor ? { borderColor: plan.borderColor } : {}}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.4 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -4 }}
+              className={`relative rounded-3xl bg-white p-6 shadow-[var(--card-shadow)] transition-all ${
+                plan.highlight ? "scale-105 ring-2 ring-[var(--primary)]"
+                : plan.id === "premium" ? "ring-2 ring-[var(--warning)]"
+                : ""
+              }`}
             >
               {plan.badge && (
-                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-xs font-bold flex items-center gap-1 ${
-                  plan.highlight ? "bg-[var(--primary)]" : "bg-[var(--warning)]"
-                }`}>
-                  {plan.badge.icon}
-                  {plan.badge.text}
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full px-4 py-1 text-xs font-bold text-white ${plan.id === "premium" ? "bg-[var(--warning)]" : "bg-[var(--primary)]"}`}>
+                  {plan.id === "premium" ? <Crown className="h-3 w-3" /> : <Star className="h-3 w-3" />}
+                  {plan.badge}
                 </div>
               )}
 
-              <h2 className="text-xl font-extrabold text-[var(--text)] mb-2 mt-2">{plan.name}</h2>
-
-              <div className="mb-4">
-                <span className="text-4xl font-extrabold text-[var(--text)]">¥{plan.price.toLocaleString()}</span>
-                <span className="text-[var(--text-sub)] text-sm">/月</span>
+              <div className="mb-4 text-center">
+                <h3 className="text-xl font-bold text-[var(--text)]">{plan.name}</h3>
+                <div className="mt-2">
+                  <span className="text-3xl font-bold text-[var(--text)]">¥{plan.price.toLocaleString()}</span>
+                  <span className="text-sm text-[var(--text-sub)]">/月</span>
+                </div>
+                <div className="mt-2 text-sm text-[var(--text-sub)]">{plan.questions}問/日</div>
               </div>
 
-              <div className="inline-block px-3 py-1 bg-[var(--primary-light)] text-[var(--primary)] rounded-full text-xs font-semibold mb-4">
-                {plan.limit}
+              <div className="mb-4 flex justify-center">
+                <span className="rounded-full bg-[var(--bg-sub)] px-3 py-1 text-xs font-medium text-[var(--text-sub)]">英語・数学 全教科対応</span>
               </div>
 
-              <div className="px-3 py-1 bg-[var(--bg-sub)] text-[var(--text-sub)] rounded-full text-xs font-medium mb-4 inline-block ml-2">
-                英語・数学 全教科対応
-              </div>
-
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, j) => (
-                  <li key={j} className="flex items-start gap-2 text-sm text-[var(--text)]">
-                    <Check className="w-4 h-4 text-[var(--success)] flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
+              <ul className="mb-6 space-y-2">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-[var(--text-sub)]">
+                    <Check className="h-4 w-4 text-[var(--success)]" />
+                    {feature}
                   </li>
                 ))}
               </ul>
 
-              <button
-                disabled={plan.disabled}
-                className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
-                  plan.disabled
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-[var(--primary)] text-white hover:shadow-lg hover:scale-105"
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                disabled={plan.id === "free"}
+                className={`w-full rounded-2xl py-3 font-bold transition-all ${
+                  plan.id === "free" ? "cursor-not-allowed bg-[var(--bg-sub)] text-[var(--text-muted)]"
+                  : plan.highlight ? "bg-[var(--primary)] text-white shadow-md hover:shadow-lg"
+                  : plan.id === "premium" ? "bg-[var(--warning)] text-white shadow-md hover:shadow-lg"
+                  : "border-2 border-[var(--primary)] bg-white text-[var(--primary)] hover:bg-[var(--primary-light)]"
                 }`}
               >
-                {plan.buttonText}
-              </button>
+                {plan.id === "free" ? "現在のプラン" : "このプランを選ぶ"}
+              </motion.button>
             </motion.div>
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <button
-            onClick={() => onNavigate("landing")}
-            className="text-[var(--text-sub)] hover:text-[var(--text)] flex items-center gap-2 mx-auto transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            戻る
-          </button>
-        </div>
-      </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-12 text-center">
+          <p className="text-sm text-[var(--text-muted)]">
+            いつでもプラン変更・解約できます。<br />
+            ご不明な点は<button className="text-[var(--primary)] underline hover:no-underline">お問い合わせ</button>ください。
+          </p>
+        </motion.div>
+      </main>
     </div>
   )
 }

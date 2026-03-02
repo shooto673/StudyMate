@@ -1,189 +1,131 @@
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ClipboardList, RotateCcw, Home } from "lucide-react"
+import { FileText, RotateCcw, Map } from "lucide-react"
 import { Mascot } from "../components/Mascot"
+import { ConfettiEffect } from "../components/ConfettiEffect"
 
-function useCountUp(target, duration = 1500) {
-  const [count, setCount] = useState(0)
+export function ResultsPage({ onNavigate, subject = "english", answers = [], selectedCharacter = "mascot" }) {
+  const [displayPercentage, setDisplayPercentage] = useState(0)
+  const [showConfetti, setShowConfetti] = useState(false)
 
-  useEffect(() => {
-    let startTime
-    let animationFrame
-
-    const animate = (currentTime) => {
-      if (!startTime) startTime = currentTime
-      const progress = Math.min((currentTime - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(eased * target))
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate)
-      }
-    }
-
-    animationFrame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [target, duration])
-
-  return count
-}
-
-export function ResultsPage({ onNavigate, subject, answers }) {
-  const correctCount = answers.filter(a => a.isCorrect).length
-  const totalCount = answers.length || 5
-  const scorePercent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
-
-  const animatedScore = useCountUp(scorePercent)
+  const correctCount = answers.filter((a) => a.isCorrect).length
+  const totalCount = answers.length || 1
+  const percentage = Math.round((correctCount / totalCount) * 100)
+  const totalTime = answers.reduce((sum, a) => sum + (a.timeSpent || 0), 0)
+  const minutes = Math.floor(totalTime / 60)
+  const seconds = Math.round(totalTime % 60)
 
   const subjectColor = subject === "english" ? "var(--english)" : "var(--math)"
-  const unitName = subject === "english" ? "be動詞" : "正負の数"
 
-  const isExcellent = scorePercent >= 80
-  const isGood = scorePercent >= 50 && scorePercent < 80
+  useEffect(() => {
+    const duration = 1500
+    const steps = 60
+    const increment = percentage / steps
+    let current = 0
 
-  const circleColor = isExcellent ? "var(--warning)" : isGood ? "var(--primary)" : "var(--error)"
-  const mascotMood = isExcellent ? "happy" : isGood ? "cheering" : "sad"
-  const mascotMessage = isExcellent
-    ? "天才！よくがんばったね！"
-    : isGood
-      ? "いい調子！もっとできるよ！"
-      : "大丈夫！復習すればきっとできる！"
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= percentage) {
+        setDisplayPercentage(percentage)
+        clearInterval(timer)
+        if (percentage >= 80) {
+          setShowConfetti(true)
+        }
+      } else {
+        setDisplayPercentage(Math.round(current))
+      }
+    }, duration / steps)
+
+    return () => clearInterval(timer)
+  }, [percentage])
+
+  const getMascotMood = () => {
+    if (percentage >= 80) return "happy"
+    if (percentage >= 50) return "cheering"
+    return "sad"
+  }
+
+  const getMascotMessage = () => {
+    if (percentage >= 80) return "天才！よくがんばったね！"
+    if (percentage >= 50) return "いい調子！もっとできるよ！"
+    return "大丈夫！復習すればきっとできる！"
+  }
 
   const radius = 70
   const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference - (animatedScore / 100) * circumference
+  const strokeDashoffset = circumference - (displayPercentage / 100) * circumference
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] py-12 px-4 relative overflow-hidden">
-      {isExcellent && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute text-[var(--warning)] text-2xl"
-              style={{ left: `${10 + Math.random() * 80}%`, top: `${10 + Math.random() * 80}%` }}
-              animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-              transition={{
-                rotate: { duration: 10, repeat: Infinity, ease: "linear" },
-                scale: { duration: 2, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 },
-              }}
-            >
-              ★
-            </motion.div>
-          ))}
-        </div>
-      )}
+    <div className="min-h-screen bg-[var(--bg)]">
+      <ConfettiEffect isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-      <div className="max-w-md mx-auto relative z-10">
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-4 py-12">
         <motion.div
-          className="flex justify-center mb-8"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, type: "spring" }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full rounded-3xl bg-white p-8 shadow-[var(--card-shadow)]"
         >
-          <div className="relative">
-            <svg className="w-48 h-48 transform -rotate-90">
-              <circle cx="96" cy="96" r={radius} stroke="var(--bg-sub)" strokeWidth="12" fill="none" />
+          <h1 className="mb-8 text-center text-2xl font-bold text-[var(--text)]">結果発表</h1>
+
+          {/* Donut Chart */}
+          <div className="relative mb-8 flex justify-center">
+            <svg width="180" height="180" className="-rotate-90">
+              <circle cx="90" cy="90" r={radius} fill="none" stroke="var(--bg-sub)" strokeWidth="16" />
               <motion.circle
-                cx="96" cy="96" r={radius} stroke={circleColor} strokeWidth="12" fill="none" strokeLinecap="round"
+                cx="90" cy="90" r={radius} fill="none"
+                stroke={subjectColor} strokeWidth="16" strokeLinecap="round"
                 strokeDasharray={circumference}
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
               />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-5xl font-extrabold" style={{ color: circleColor }}>{animatedScore}%</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-4xl font-bold text-[var(--text)]">{displayPercentage}%</span>
+              <span className="text-sm text-[var(--text-sub)]">正答率</span>
             </div>
           </div>
-        </motion.div>
 
-        <motion.div
-          className="flex flex-col items-center mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-        >
-          <Mascot mood={mascotMood} size="lg" message={mascotMessage} />
-          <p className="text-xl font-extrabold text-[var(--text)] mt-4">
-            {totalCount}問中 {correctCount}問正解！
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="bg-white rounded-3xl p-6 shadow-[var(--card-shadow)] mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.4 }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <span className="px-3 py-1 rounded-full text-white text-xs font-bold" style={{ backgroundColor: subjectColor }}>
-              {subject === "english" ? "🔤 英語" : "🔢 数学"}
-            </span>
-            <span className="font-bold text-[var(--text)]">{unitName}</span>
+          {/* Mascot */}
+          <div className="mb-8 flex justify-center">
+            <Mascot character={selectedCharacter} mood={getMascotMood()} size="lg" message={getMascotMessage()} />
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center">
-                <span className="text-[var(--primary)]">✓</span>
-              </div>
-              <div>
-                <div className="text-sm text-[var(--text-sub)]">正解数</div>
-                <div className="font-bold text-[var(--text)]">{correctCount} / {totalCount}問</div>
-              </div>
+          {/* Stats */}
+          <div className="mb-8 grid grid-cols-3 gap-4">
+            <div className="rounded-2xl bg-[var(--success-light)] p-4 text-center">
+              <div className="text-2xl font-bold text-[var(--success)]">{correctCount}</div>
+              <div className="text-xs text-[var(--text-sub)]">正解数</div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--success-light)] flex items-center justify-center">
-                <span className="text-[var(--success)]">%</span>
-              </div>
-              <div>
-                <div className="text-sm text-[var(--text-sub)]">正答率</div>
-                <div className="font-bold text-[var(--text)]">{scorePercent}%</div>
-              </div>
+            <div className="rounded-2xl bg-[var(--primary-light)] p-4 text-center">
+              <div className="text-2xl font-bold text-[var(--primary)]">{percentage}%</div>
+              <div className="text-xs text-[var(--text-sub)]">正答率</div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--english-light)] flex items-center justify-center">
-                <span className="text-[var(--english)]">⏱</span>
+            <div className="rounded-2xl bg-[var(--bg-sub)] p-4 text-center">
+              <div className="text-2xl font-bold text-[var(--text)]">
+                {minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, "0")}` : `${seconds}秒`}
               </div>
-              <div>
-                <div className="text-sm text-[var(--text-sub)]">かかった時間</div>
-                <div className="font-bold text-[var(--text)]">2分30秒</div>
-              </div>
+              <div className="text-xs text-[var(--text-sub)]">時間</div>
             </div>
           </div>
-        </motion.div>
 
-        <motion.div
-          className="flex flex-col sm:flex-row gap-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.4 }}
-        >
-          <button
-            onClick={() => onNavigate("review")}
-            className="flex-1 px-6 py-4 bg-[var(--primary)] text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <ClipboardList className="w-5 h-5" />
-            解答を確認
-          </button>
-          <button
-            onClick={() => onNavigate("quiz")}
-            className="flex-1 px-6 py-4 bg-white border-2 border-[var(--primary)] text-[var(--primary)] rounded-2xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            <RotateCcw className="w-5 h-5" />
-            もう一度
-          </button>
+          {/* Actions */}
+          <div className="flex flex-col gap-3">
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("review")} className="flex items-center justify-center gap-2 rounded-2xl border-2 border-[var(--primary)] bg-white px-6 py-4 font-bold text-[var(--primary)] transition-all hover:bg-[var(--primary-light)]">
+              <FileText className="h-5 w-5" />
+              解答を確認
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("quiz")} className="flex items-center justify-center gap-2 rounded-2xl border-2 border-[var(--text-muted)] bg-white px-6 py-4 font-bold text-[var(--text-sub)] transition-all hover:border-[var(--text-sub)] hover:bg-[var(--bg-sub)]">
+              <RotateCcw className="h-5 w-5" />
+              もう一度
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("stageMap")} className="flex items-center justify-center gap-2 rounded-2xl bg-[var(--primary)] px-6 py-4 font-bold text-white shadow-md transition-all hover:shadow-lg">
+              <Map className="h-5 w-5" />
+              マップへ戻る
+            </motion.button>
+          </div>
         </motion.div>
-
-        <button
-          onClick={() => onNavigate("dashboard")}
-          className="w-full mt-4 py-3 text-[var(--text-sub)] font-semibold flex items-center justify-center gap-2 hover:text-[var(--text)] transition-colors"
-        >
-          <Home className="w-4 h-4" />
-          ダッシュボードへ
-        </button>
-      </div>
+      </main>
     </div>
   )
 }

@@ -1,6 +1,12 @@
 import { motion } from "framer-motion"
 
-// StudyMateくん（青いフクロウ）
+const sizeMap = {
+  sm: 48,
+  md: 80,
+  lg: 150,
+  xl: 200,
+}
+
 const mascotImages = {
   normal: "/mascots/mascot-normal.png",
   happy: "/mascots/mascot-happy.png",
@@ -12,7 +18,6 @@ const mascotImages = {
   sleeping: "/mascots/mascot-sleeping.png",
 }
 
-// モナちゃん（ピンク）
 const monaImages = {
   normal: "/mascots/mona-normal.png",
   happy: "/mascots/mona-happy.png",
@@ -24,45 +29,85 @@ const monaImages = {
   sleeping: "/mascots/mona-sleeping.png",
 }
 
-const sizeMap = {
-  sm: 48,
-  md: 80,
-  lg: 150,
-  xl: 200,
-}
-
-export function Mascot({ mood = "normal", size = "md", character = "mascot", message, className = "" }) {
-  const imageSize = sizeMap[size]
-  const images = character === "mona" ? monaImages : mascotImages
-  const altText = character === "mona" ? "モナちゃん" : "StudyMateくん"
+export function Mascot({
+  mood = "normal",
+  size = "md",
+  character = "mascot",
+  message,
+  className = "",
+  animate = true,
+}) {
+  const pixelSize = sizeMap[size]
+  const imageUrl = character === "mona" ? monaImages[mood] : mascotImages[mood]
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <motion.div
-        className="relative animate-float animate-pulse-glow"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3, type: "spring" }}
-      >
-        <img
-          src={images[mood]}
-          alt={altText}
-          className="object-contain"
-          style={{ width: imageSize, height: imageSize }}
-        />
-      </motion.div>
-
+    <div className={`relative inline-flex flex-col items-center ${className}`}>
       {message && (
         <motion.div
-          className="relative bg-white rounded-2xl px-4 py-3 shadow-md max-w-[200px]"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.3, type: "spring", stiffness: 300 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative mb-2 rounded-2xl bg-white px-4 py-2 text-sm font-medium text-[var(--text)] shadow-[var(--card-shadow)]"
+          style={{ maxWidth: pixelSize * 2.5 }}
         >
-          <div className="absolute left-0 top-1/2 -translate-x-2 -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-white" />
-          <p className="text-sm text-[var(--text)] font-medium leading-relaxed">{message}</p>
+          <span className="text-balance text-center block">{message}</span>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white" />
         </motion.div>
       )}
+      <motion.div
+        className={animate ? "animate-float" : ""}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <img
+          src={imageUrl}
+          alt={character === "mona" ? "モナちゃん" : "テイラーくん"}
+          width={pixelSize}
+          height={pixelSize}
+          className="object-contain"
+          style={{ width: pixelSize, height: pixelSize }}
+        />
+      </motion.div>
+    </div>
+  )
+}
+
+export function MascotWithGlow({
+  mood = "normal",
+  size = "md",
+  character = "mascot",
+  message,
+  className = "",
+}) {
+  const pixelSize = sizeMap[size]
+  const imageUrl = character === "mona" ? monaImages[mood] : mascotImages[mood]
+
+  return (
+    <div className={`relative inline-flex flex-col items-center ${className}`}>
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative mb-2 rounded-2xl bg-white px-4 py-2 text-sm font-medium text-[var(--text)] shadow-[var(--card-shadow)]"
+          style={{ maxWidth: pixelSize * 2.5 }}
+        >
+          <span className="text-balance text-center block">{message}</span>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white" />
+        </motion.div>
+      )}
+      <motion.div
+        className="animate-float animate-pulse-glow rounded-full"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <img
+          src={imageUrl}
+          alt={character === "mona" ? "モナちゃん" : "テイラーくん"}
+          width={pixelSize}
+          height={pixelSize}
+          className="object-contain"
+          style={{ width: pixelSize, height: pixelSize }}
+        />
+      </motion.div>
     </div>
   )
 }

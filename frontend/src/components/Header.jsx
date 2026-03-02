@@ -1,57 +1,48 @@
 import { motion } from "framer-motion"
-import { BookOpen, ChevronDown } from "lucide-react"
+import { User } from "lucide-react"
 
-export function Header({ isLoggedIn = false, grade, onNavigate }) {
+export function Header({ isLoggedIn = false, grade, onNavigate, className = "" }) {
   return (
     <motion.header
-      className="sticky top-0 z-50 bg-white border-b border-[var(--card-border)] shadow-sm"
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      className={`sticky top-0 z-50 w-full border-b border-[var(--card-border)] bg-white/80 backdrop-blur-md ${className}`}
     >
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <button
-          onClick={() => onNavigate(isLoggedIn ? "dashboard" : "landing")}
-          className="flex items-center gap-2 text-xl font-extrabold text-[var(--text)] hover:opacity-80 transition-opacity"
+          onClick={() => onNavigate("landing")}
+          className="flex items-center gap-2 text-xl font-bold text-[var(--text)] transition-transform hover:scale-105"
         >
-          <motion.span
-            className="text-2xl"
-            animate={{ y: [0, -3, 0] }}
-            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <BookOpen className="w-7 h-7 text-[var(--primary)]" />
-          </motion.span>
+          <span className="text-2xl">📖</span>
           <span>StudyMate</span>
         </button>
 
-        {/* Right side */}
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              {/* Grade dropdown */}
               {grade && (
-                <button className="flex items-center gap-1 px-4 py-2 bg-[var(--primary-light)] text-[var(--primary)] rounded-full text-sm font-semibold hover:bg-opacity-80 transition-colors">
+                <span className="text-sm font-medium text-[var(--text-sub)]">
                   {grade}
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+                </span>
               )}
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-[var(--primary-light)] border-2 border-[var(--primary)] flex items-center justify-center">
-                <span className="text-[var(--primary)] font-bold text-sm">U</span>
-              </div>
-              {/* Level badge */}
-              <span className="px-3 py-1 bg-[var(--primary-light)] text-[var(--primary)] rounded-full text-xs font-bold">
-                Lv.12
-              </span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onNavigate("myPage")}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-light)] text-[var(--primary)] transition-shadow hover:shadow-md"
+              >
+                <User className="h-5 w-5" />
+              </motion.button>
             </>
           ) : (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => onNavigate("login")}
-              className="px-5 py-2 bg-[var(--primary)] text-white rounded-full font-semibold text-sm hover:scale-105 hover:shadow-lg transition-all duration-200"
+              className="rounded-2xl bg-[var(--primary)] px-6 py-2 font-bold text-white shadow-md transition-shadow hover:shadow-lg"
             >
               ログイン
-            </button>
+            </motion.button>
           )}
         </div>
       </div>

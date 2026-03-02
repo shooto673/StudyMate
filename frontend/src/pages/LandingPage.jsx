@@ -1,119 +1,118 @@
 import { motion } from "framer-motion"
-import { CheckCircle, Sparkles, Zap, Trophy, ArrowRight } from "lucide-react"
-import { Mascot } from "../components/Mascot"
+import { Check, Sparkles, Zap, Trophy, Smartphone, PenLine, RefreshCw, Languages, Calculator } from "lucide-react"
 import { Header } from "../components/Header"
+import { FloatingDecorations } from "../components/FloatingDecorations"
+import { Mascot } from "../components/Mascot"
+
+const steps = [
+  { icon: Smartphone, title: "Googleでログイン", description: "1秒で登録完了" },
+  { icon: PenLine, title: "問題を解く", description: "AIが最適な問題を出題" },
+  { icon: RefreshCw, title: "弱点を復習", description: "苦手を克服" },
+]
+
+const features = [
+  { icon: Sparkles, title: "単元にピッタリの問題", description: "学年・単元に合わせてAIが問題を自動生成" },
+  { icon: Zap, title: "間違いを即フィードバック", description: "その場で解説を表示して理解を深める" },
+  { icon: Trophy, title: "やる気が続く仕組み", description: "ストリークや達成感でモチベーションUP" },
+]
 
 export function LandingPage({ onNavigate }) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <FloatingDecorations />
       <Header onNavigate={onNavigate} />
 
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: "radial-gradient(circle, var(--primary) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
-
-        <div className="max-w-6xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
+      <section className="relative overflow-hidden px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <motion.div
-              className="flex-1 text-center lg:text-left"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
             >
-              <p className="text-lg text-[var(--text-sub)] mb-2">AIが、きみだけの</p>
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-[var(--primary)] mb-6 relative inline-block text-balance">
-                勉強パートナーに。
-                <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 200 12" fill="none">
-                  <path d="M2 8c40-4 80-2 120 0s80 4 76 0" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" opacity="0.3"/>
-                </svg>
+              <h1 className="text-balance text-3xl font-bold leading-tight text-[var(--text)] md:text-4xl lg:text-5xl">
+                AIが、きみだけの
+                <br />
+                <span className="text-[var(--primary)]">勉強パートナーに。</span>
               </h1>
-              <p className="text-[var(--text-sub)] text-lg mb-8 max-w-md mx-auto lg:mx-0 leading-relaxed">
+              <p className="mt-6 text-pretty text-lg text-[var(--text-sub)]">
                 AIが学年・単元に合わせた問題をリアルタイム生成。
+                <br />
                 毎日の学習がもっと楽しくなる。
               </p>
 
               <motion.button
-                onClick={() => onNavigate("login")}
-                className="px-8 py-4 bg-[var(--accent)] text-white text-lg font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 mx-auto lg:mx-0"
                 whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onNavigate("login")}
+                className="mt-8 rounded-2xl bg-[var(--accent)] px-8 py-4 text-lg font-bold text-white shadow-lg transition-shadow hover:shadow-xl"
               >
-                無料ではじめる
-                <ArrowRight className="w-5 h-5" />
+                無料ではじめる →
               </motion.button>
 
-              <div className="flex flex-wrap justify-center lg:justify-start gap-4 mt-6">
-                {["ずっと無料で使える", "クレカ不要", "Googleで1秒登録"].map((text, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-[var(--text-sub)]">
-                    <div className="w-5 h-5 rounded-full bg-[var(--success-light)] flex items-center justify-center">
-                      <CheckCircle className="w-3 h-3 text-[var(--success)]" />
-                    </div>
-                    {text}
-                  </div>
-                ))}
+              <div className="mt-6 flex flex-wrap gap-4 text-sm text-[var(--text-sub)]">
+                <span className="flex items-center gap-1">
+                  <Check className="h-4 w-4 text-[var(--success)]" />
+                  ずっと無料で使える
+                </span>
+                <span className="flex items-center gap-1">
+                  <Check className="h-4 w-4 text-[var(--success)]" />
+                  クレカ不要
+                </span>
+                <span className="flex items-center gap-1">
+                  <Check className="h-4 w-4 text-[var(--success)]" />
+                  Googleで1秒登録
+                </span>
               </div>
             </motion.div>
 
             <motion.div
-              className="flex-shrink-0"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex items-center justify-center gap-4"
             >
-              <Mascot mood="happy" size="xl" message="一緒に勉強しよう！" />
+              <Mascot character="mascot" mood="happy" size="xl" />
+              <Mascot character="mona" mood="cheering" size="xl" />
             </motion.div>
           </div>
-
-          <motion.div
-            className="flex flex-wrap justify-center gap-4 mt-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-          >
-            <span className="px-4 py-2 bg-[var(--english-light)] text-[var(--english)] rounded-full font-semibold flex items-center gap-2">
-              <span>🔤</span> 英語
-            </span>
-            <span className="px-4 py-2 bg-[var(--math-light)] text-[var(--math)] rounded-full font-semibold flex items-center gap-2">
-              <span>🔢</span> 数学
-            </span>
-          </motion.div>
-          <p className="text-center text-[var(--text-sub)] text-sm mt-3">中学1〜3年対応</p>
         </div>
       </section>
 
-      {/* Steps Section */}
-      <section className="py-16 bg-[var(--bg-sub)]">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-center text-[var(--text)] mb-12">
-            使い方は<span className="text-[var(--primary)]">かんたん</span>3ステップ
-          </h2>
+      {/* 3 Steps Section */}
+      <section className="bg-[var(--bg-sub)] px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-12 text-center text-2xl font-bold text-[var(--text)] md:text-3xl"
+          >
+            かんたん3ステップで始められる
+          </motion.h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { step: 1, icon: "📱", title: "Googleでログイン", desc: "メアドとパスワードは不要。タップ1回で開始！" },
-              { step: 2, icon: "📝", title: "問題を解く", desc: "教科と単元を選んで、さっそく学習スタート。" },
-              { step: 3, icon: "🔄", title: "弱点を復習", desc: "間違えた問題は自動で復習リストに追加。" },
-            ].map((item, i) => (
+          <div className="grid gap-6 md:grid-cols-3">
+            {steps.map((step, index) => (
               <motion.div
-                key={i}
-                className="bg-white rounded-3xl p-6 shadow-[var(--card-shadow)] relative hover:-translate-y-1 hover:shadow-[var(--card-hover-shadow)] transition-all duration-200"
-                initial={{ opacity: 0, y: 20 }}
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
                 viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.03, y: -4 }}
+                className="rounded-3xl bg-white p-6 text-center shadow-[var(--card-shadow)] transition-shadow hover:shadow-[var(--card-hover-shadow)]"
               >
-                <div className="absolute -top-4 left-6 w-10 h-10 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-extrabold text-lg">
-                  {item.step}
+                <div className="mb-4 flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-[var(--primary-light)]">
+                  <step.icon className="h-7 w-7 text-[var(--primary)]" />
                 </div>
-                <div className="text-4xl mb-4 mt-4">{item.icon}</div>
-                <h3 className="text-lg font-bold text-[var(--text)] mb-2">{item.title}</h3>
-                <p className="text-[var(--text-sub)] text-sm leading-relaxed">{item.desc}</p>
+                <div className="mb-1 text-sm font-medium text-[var(--primary)]">
+                  STEP {index + 1}
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-[var(--text)]">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-[var(--text-sub)]">{step.description}</p>
               </motion.div>
             ))}
           </div>
@@ -121,67 +120,110 @@ export function LandingPage({ onNavigate }) {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-[var(--bg)]">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-center text-[var(--text)] mb-12">
-            StudyMateの<span className="text-[var(--primary)]">特徴</span>
-          </h2>
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-12 text-center text-2xl font-bold text-[var(--text)] md:text-3xl"
+          >
+            StudyMateの特徴
+          </motion.h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: <Sparkles className="w-6 h-6 text-[var(--primary)]" />,
-                bg: "var(--primary-light)",
-                title: "単元にピッタリの問題",
-                desc: "AIが学年・単元に合わせて毎回違う問題を生成。飽きずに続けられる！"
-              },
-              {
-                icon: <Zap className="w-6 h-6 text-[var(--english)]" />,
-                bg: "var(--english-light)",
-                title: "間違いを即フィードバック",
-                desc: "回答直後にわかりやすい日本語解説。すぐに理解が深まる。"
-              },
-              {
-                icon: <Trophy className="w-6 h-6 text-[var(--warning)]" />,
-                bg: "var(--accent-light)",
-                title: "やる気が続く仕組み",
-                desc: "連続日数、正答率、マスコットの応援でモチベーションアップ！"
-              },
-            ].map((item, i) => (
+          <div className="grid gap-6 md:grid-cols-3">
+            {features.map((feature, index) => (
               <motion.div
-                key={i}
-                className="bg-white rounded-3xl p-6 shadow-[var(--card-shadow)] hover:-translate-y-1 hover:shadow-[var(--card-hover-shadow)] transition-all duration-200"
-                initial={{ opacity: 0, y: 20 }}
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
                 viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.03, y: -4 }}
+                className="rounded-3xl bg-white p-6 shadow-[var(--card-shadow)] transition-shadow hover:shadow-[var(--card-hover-shadow)]"
               >
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-                  style={{ backgroundColor: item.bg }}
-                >
-                  {item.icon}
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-light)]">
+                  <feature.icon className="h-6 w-6 text-[var(--primary)]" />
                 </div>
-                <h3 className="text-lg font-bold text-[var(--text)] mb-2">{item.title}</h3>
-                <p className="text-[var(--text-sub)] text-sm leading-relaxed">{item.desc}</p>
+                <h3 className="mb-2 text-lg font-bold text-[var(--text)]">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-[var(--text-sub)]">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="py-16 bg-[var(--bg-sub)]">
-        <div className="text-center">
-          <button
-            onClick={() => onNavigate("pricing")}
-            className="text-[var(--primary)] font-semibold hover:underline flex items-center gap-1 mx-auto"
+      {/* Subject Badges */}
+      <section className="bg-[var(--bg-sub)] px-4 py-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-8 text-2xl font-bold text-[var(--text)] md:text-3xl"
           >
-            有料プランとの違いを見る
-            <ArrowRight className="w-4 h-4" />
-          </button>
+            対応教科
+          </motion.h2>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap justify-center gap-4"
+          >
+            <span className="flex items-center gap-2 rounded-full bg-[var(--english-light)] px-6 py-3 text-lg font-bold text-[var(--english)]">
+              <Languages className="h-5 w-5" />
+              英語
+            </span>
+            <span className="flex items-center gap-2 rounded-full bg-[var(--math-light)] px-6 py-3 text-lg font-bold text-[var(--math)]">
+              <Calculator className="h-5 w-5" />
+              数学
+            </span>
+          </motion.div>
+
+          <p className="mt-4 text-[var(--text-sub)]">中学1〜3年対応</p>
         </div>
       </section>
+
+      {/* CTA Section */}
+      <section className="px-4 py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="rounded-3xl bg-white p-8 shadow-[var(--card-shadow)] md:p-12"
+          >
+            <div className="mb-6 flex justify-center gap-4">
+              <Mascot character="mascot" mood="cheering" size="lg" />
+              <Mascot character="mona" mood="happy" size="lg" />
+            </div>
+            <h2 className="mb-4 text-2xl font-bold text-[var(--text)]">
+              さあ、一緒に勉強しよう！
+            </h2>
+            <p className="mb-8 text-[var(--text-sub)]">
+              テイラーくんとモナちゃんがきみの学習をサポートするよ
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onNavigate("login")}
+              className="rounded-2xl bg-[var(--accent)] px-8 py-4 text-lg font-bold text-white shadow-lg transition-shadow hover:shadow-xl"
+            >
+              無料ではじめる →
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-[var(--card-border)] bg-white px-4 py-8">
+        <div className="mx-auto max-w-6xl text-center text-sm text-[var(--text-sub)]">
+          <p>© 2026 StudyMate. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -1,319 +1,127 @@
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { BarChart3, Target, Flame, ArrowRight, Medal } from "lucide-react"
-import { Mascot } from "../components/Mascot"
+import { motion } from "framer-motion"
 import { Header } from "../components/Header"
+import { Mascot } from "../components/Mascot"
+import { BarChart3, Target, Flame, Languages, Calculator, ChevronRight, BookOpen } from "lucide-react"
 
-const englishUnits = [
-  { slug: "j1-be", title: "be動詞", subject: "english", icon: "🔤", progress: 80 },
-  { slug: "j1-do", title: "一般動詞", subject: "english", icon: "🔤", progress: 45 },
-  { slug: "j1-neg", title: "疑問文・否定文", subject: "english", icon: "🔤", progress: 0 },
-]
+export function DashboardPage({ onNavigate, userName = "ユーザー", selectedCharacter = "mascot" }) {
+  const stats = {
+    totalAnswers: 42,
+    accuracy: 78,
+    streak: 3,
+    todayProgress: 3,
+    todayGoal: 10,
+  }
 
-const mathUnits = [
-  { slug: "j1-positive-negative", title: "正負の数", subject: "math", icon: "🔢", progress: 60 },
-  { slug: "j1-equations", title: "一次方程式", subject: "math", icon: "🔢", progress: 25 },
-  { slug: "j1-geometry", title: "平面図形", subject: "math", icon: "🔢", progress: 0 },
-]
-
-function useCountUp(target, duration = 1000) {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    let startTime
-    let animationFrame
-
-    const animate = (currentTime) => {
-      if (!startTime) startTime = currentTime
-      const progress = Math.min((currentTime - startTime) / duration, 1)
-      setCount(Math.floor(progress * target))
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate)
-      }
-    }
-
-    animationFrame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [target, duration])
-
-  return count
-}
-
-export function DashboardPage({ onNavigate, grade, onSelectUnit, units: unitsProp, stats, usageToday, dailyLimit, userName }) {
-  const [selectedSubject, setSelectedSubject] = useState("english")
-
-  const defaultStats = { totalAnswers: 42, accuracy: 78, streak: 3 }
-  const resolvedStats = stats || defaultStats
-
-  const totalAnswers = useCountUp(resolvedStats.totalAnswers)
-  const accuracy = useCountUp(resolvedStats.accuracy)
-  const streak = useCountUp(resolvedStats.streak)
-
-  const resolvedUsageToday = usageToday != null ? usageToday : 3
-  const resolvedDailyLimit = dailyLimit != null ? dailyLimit : 10
-  const resolvedUserName = userName || "ユーザー"
-
-  const hasUnitsProp = Array.isArray(unitsProp) && unitsProp.length > 0
-
-  const displayUnits = hasUnitsProp
-    ? unitsProp.filter(unit => unit.subject === selectedSubject)
-    : selectedSubject === "english" ? englishUnits : mathUnits
-
-  const subjectColor = selectedSubject === "english" ? "var(--english)" : "var(--math)"
-  const subjectLightColor = selectedSubject === "english" ? "var(--english-light)" : "var(--math-light)"
+  const subjects = [
+    { id: "english", name: "英語", icon: Languages, color: "var(--english)", bgColor: "var(--english-light)", progress: 45, nextUnit: "be動詞の過去形" },
+    { id: "math", name: "数学", icon: Calculator, color: "var(--math)", bgColor: "var(--math-light)", progress: 32, nextUnit: "連立方程式" },
+  ]
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <Header isLoggedIn grade={grade} onNavigate={onNavigate} />
+      <Header onNavigate={onNavigate} isLoggedIn userName={userName} />
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Welcome Card */}
-        <motion.div
-          className="bg-white rounded-3xl p-6 shadow-[var(--card-shadow)] mb-6 overflow-hidden relative"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div
-            className="absolute inset-0 opacity-30"
-            style={{
-              background: "linear-gradient(135deg, var(--bg-sub) 0%, transparent 50%)",
-            }}
-          />
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h1 className="text-2xl font-extrabold text-[var(--text)] mb-2">
-                おかえり、{resolvedUserName}さん！👋
-              </h1>
-              <p className="text-[var(--text-sub)]">今日は何を勉強する？</p>
-            </div>
-            <Mascot mood="studying" size="md" message="今日は何を勉強する？" />
+      <main className="mx-auto max-w-4xl px-4 py-6">
+        {/* Welcome */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-center justify-between rounded-3xl bg-white p-6 shadow-[var(--card-shadow)]">
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--text)]">おかえり、{userName}さん！</h1>
+            <p className="mt-1 text-[var(--text-sub)]">今日は何を勉強する？</p>
           </div>
+          <Mascot character={selectedCharacter} mood="studying" size="md" />
         </motion.div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          {/* Total Answers */}
-          <motion.div
-            className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-[var(--primary)]" />
-              </div>
+        {/* Stats */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6 grid grid-cols-3 gap-4">
+          <div className="rounded-2xl bg-white p-5 shadow-[var(--card-shadow)]">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-light)]"><BarChart3 className="h-5 w-5 text-[var(--primary)]" /></div>
               <span className="text-sm text-[var(--text-sub)]">総回答数</span>
             </div>
-            <div className="text-3xl font-extrabold text-[var(--text)]">
-              {totalAnswers}問
-            </div>
-          </motion.div>
-
-          {/* Accuracy */}
-          <motion.div
-            className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-[var(--success-light)] flex items-center justify-center">
-                <Target className="w-5 h-5 text-[var(--success)]" />
-              </div>
+            <p className="text-3xl font-bold text-[var(--text)]">{stats.totalAnswers}<span className="ml-1 text-lg font-normal text-[var(--text-sub)]">問</span></p>
+          </div>
+          <div className="rounded-2xl bg-white p-5 shadow-[var(--card-shadow)]">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--success-light)]"><Target className="h-5 w-5 text-[var(--success)]" /></div>
               <span className="text-sm text-[var(--text-sub)]">正答率</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12">
-                <svg className="w-12 h-12 transform -rotate-90">
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="var(--success-light)"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="var(--success)"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeDasharray={`${accuracy * 1.256} 126`}
-                    strokeLinecap="round"
-                  />
+              <div className="relative h-12 w-12">
+                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="var(--success-light)" strokeWidth="4" />
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="var(--success)" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(stats.accuracy / 100) * 125.6} 125.6`} />
                 </svg>
               </div>
-              <span className="text-3xl font-extrabold text-[var(--text)]">{accuracy}%</span>
+              <p className="text-3xl font-bold text-[var(--text)]">{stats.accuracy}<span className="text-lg font-normal text-[var(--text-sub)]">%</span></p>
             </div>
-          </motion.div>
-
-          {/* Streak */}
-          <motion.div
-            className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-[var(--accent-light)] flex items-center justify-center">
-                <Flame className="w-5 h-5 text-[var(--accent)]" />
-              </div>
+          </div>
+          <div className="rounded-2xl bg-white p-5 shadow-[var(--card-shadow)]">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--accent-light)]"><Flame className="h-5 w-5 text-[var(--accent)]" /></div>
               <span className="text-sm text-[var(--text-sub)]">連続日数</span>
             </div>
-            <div className="text-3xl font-extrabold text-[var(--text)] flex items-center gap-1">
-              {streak}日
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-              >
-                🔥
-              </motion.span>
+            <div className="flex items-center gap-2">
+              <p className="text-3xl font-bold text-[var(--text)]">{stats.streak}<span className="ml-1 text-lg font-normal text-[var(--text-sub)]">日</span></p>
+              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                <Flame className="h-7 w-7 text-orange-500" fill="currentColor" />
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
-
-        {/* Usage bar */}
-        <motion.div
-          className="bg-white rounded-2xl p-4 shadow-[var(--card-shadow)] mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.4 }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-[var(--text)]">今日の学習</span>
-            <span className="text-sm text-[var(--text-sub)]">{resolvedUsageToday} / {resolvedDailyLimit}問</span>
-          </div>
-          <div className="h-3 bg-[var(--bg-sub)] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: `linear-gradient(90deg, var(--primary), var(--english))` }}
-              initial={{ width: 0 }}
-              animate={{ width: `${resolvedDailyLimit > 0 ? (resolvedUsageToday / resolvedDailyLimit) * 100 : 0}%` }}
-              transition={{ duration: 0.8, type: "spring" }}
-            />
           </div>
         </motion.div>
 
-        {/* Subject Tabs */}
-        <motion.div
-          className="flex gap-3 mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-        >
-          <button
-            onClick={() => setSelectedSubject("english")}
-            className={`
-              px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200
-              ${selectedSubject === "english"
-                ? "bg-[var(--english)] text-white shadow-lg"
-                : "bg-white border border-[var(--card-border)] text-[var(--text-sub)] hover:border-[var(--english)]"
-              }
-            `}
-          >
-            <span>🔤</span> 英語
-          </button>
-          <button
-            onClick={() => setSelectedSubject("math")}
-            className={`
-              px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200
-              ${selectedSubject === "math"
-                ? "bg-[var(--math)] text-white shadow-lg"
-                : "bg-white border border-[var(--card-border)] text-[var(--text-sub)] hover:border-[var(--math)]"
-              }
-            `}
-          >
-            <span>🔢</span> 数学
-          </button>
+        {/* Today's Progress */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-6 rounded-2xl bg-white p-5 shadow-[var(--card-shadow)]">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="font-medium text-[var(--text)]">今日の学習</span>
+            <span className="text-sm text-[var(--text-sub)]">{stats.todayProgress} / {stats.todayGoal}問</span>
+          </div>
+          <div className="h-3 overflow-hidden rounded-full bg-[var(--bg-sub)]">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${(stats.todayProgress / stats.todayGoal) * 100}%` }} transition={{ duration: 0.8, ease: "easeOut" }} className="h-full rounded-full" style={{ background: "linear-gradient(90deg, var(--primary), var(--english))" }} />
+          </div>
         </motion.div>
 
-        {/* Unit Cards */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedSubject}
-            className="grid md:grid-cols-2 gap-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {displayUnits.map((unit, i) => (
-              <motion.div
-                key={unit.slug}
-                className="relative bg-white rounded-2xl p-5 shadow-[var(--card-shadow)] hover:-translate-y-1 hover:shadow-[var(--card-hover-shadow)] transition-all duration-200"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.3 }}
-              >
-                {/* Subject indicator */}
-                <div
-                  className="absolute top-4 left-4 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: subjectColor }}
-                />
-
-                {/* Gold medal for high progress */}
-                {unit.progress >= 80 && (
-                  <motion.div
-                    className="absolute top-3 right-3"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", delay: 0.3 }}
-                  >
-                    <Medal className="w-6 h-6 text-[var(--warning)]" />
-                  </motion.div>
-                )}
-
-                <h3 className="text-lg font-bold text-[var(--text)] mb-3 ml-4">
-                  {unit.title}
-                </h3>
-
-                {/* Progress bar */}
-                <div className="mb-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-[var(--text-sub)]">進捗</span>
-                    <span className="text-xs text-[var(--text-sub)]">{unit.progress}%</span>
+        {/* Subject Selection */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <h2 className="mb-4 text-lg font-bold text-[var(--text)]">教科を選ぶ</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {subjects.map((subject) => (
+              <motion.button key={subject.id} whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("stageMap")} className="flex items-center gap-4 rounded-2xl bg-white p-5 text-left shadow-[var(--card-shadow)] transition-shadow hover:shadow-[var(--card-hover-shadow)]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: subject.bgColor }}>
+                  <subject.icon className="h-7 w-7" style={{ color: subject.color }} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-[var(--text)]">{subject.name}</h3>
+                    <ChevronRight className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
-                  <div className="h-2 bg-[var(--bg-sub)] rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: subjectColor }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${unit.progress}%` }}
-                      transition={{ duration: 0.8, type: "spring", delay: i * 0.1 }}
-                    />
+                  <p className="mt-1 text-sm text-[var(--text-sub)]">次の単元: {subject.nextUnit}</p>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--bg-sub)]">
+                    <div className="h-full rounded-full" style={{ width: `${subject.progress}%`, backgroundColor: subject.color }} />
                   </div>
                 </div>
-
-                {/* Study button */}
-                <button
-                  onClick={() => onSelectUnit(unit.subject || selectedSubject, unit.slug)}
-                  className="flex items-center gap-1 text-sm font-semibold transition-colors"
-                  style={{ color: subjectColor }}
-                >
-                  学習する
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </motion.div>
+              </motion.button>
             ))}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </motion.div>
 
-        {/* Footer link */}
-        <div className="text-center mt-12">
-          <button
-            onClick={() => onNavigate("pricing")}
-            className="text-[var(--primary)] font-semibold hover:underline flex items-center gap-1 mx-auto"
-          >
-            プランを変更
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+        {/* Quick Actions */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-6 grid grid-cols-2 gap-4">
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("review")} className="flex items-center gap-3 rounded-2xl bg-[var(--primary-light)] p-4 text-left">
+            <BookOpen className="h-6 w-6 text-[var(--primary)]" />
+            <div>
+              <p className="font-medium text-[var(--primary)]">復習する</p>
+              <p className="text-sm text-[var(--primary)]/70">間違えた問題を確認</p>
+            </div>
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("myPage")} className="flex items-center gap-3 rounded-2xl bg-[var(--accent-light)] p-4 text-left">
+            <Target className="h-6 w-6 text-[var(--accent)]" />
+            <div>
+              <p className="font-medium text-[var(--accent)]">マイページ</p>
+              <p className="text-sm text-[var(--accent)]/70">学習記録を見る</p>
+            </div>
+          </motion.button>
+        </motion.div>
+      </main>
     </div>
   )
 }

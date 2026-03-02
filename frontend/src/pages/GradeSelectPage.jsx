@@ -1,109 +1,76 @@
-import { useState } from "react"
 import { motion } from "framer-motion"
-import { Lock, Check, ArrowRight } from "lucide-react"
+import { Lock } from "lucide-react"
+import { Header } from "../components/Header"
+import { FloatingDecorations } from "../components/FloatingDecorations"
 import { Mascot } from "../components/Mascot"
 
 const grades = [
-  { id: "e4", label: "小学4年生", emoji: "🌱", available: false, subjects: "近日公開" },
-  { id: "e5", label: "小学5年生", emoji: "🌿", available: false, subjects: "近日公開" },
-  { id: "e6", label: "小学6年生", emoji: "🍀", available: false, subjects: "近日公開" },
-  { id: "j1", label: "中学1年生", emoji: "📗", available: true, subjects: "英語・数学対応中" },
-  { id: "j2", label: "中学2年生", emoji: "📘", available: true, subjects: "英語・数学対応中" },
-  { id: "j3", label: "中学3年生", emoji: "📙", available: true, subjects: "英語・数学対応中" },
+  { id: "e4", label: "小学4年", emoji: "🌱", locked: true },
+  { id: "e5", label: "小学5年", emoji: "🌻", locked: true },
+  { id: "e6", label: "小学6年", emoji: "🍀", locked: true },
+  { id: "j1", label: "中学1年", emoji: "🌸", locked: false },
+  { id: "j2", label: "中学2年", emoji: "🌿", locked: false },
+  { id: "j3", label: "中学3年", emoji: "🌙", locked: false },
 ]
 
-export function GradeSelectPage({ onNavigate, onSelectGrade }) {
-  const [selectedGrade, setSelectedGrade] = useState(null)
-
-  const handleNext = () => {
-    if (selectedGrade) {
-      const grade = grades.find(g => g.id === selectedGrade)
-      if (grade) {
-        onSelectGrade(grade.label)
-        onNavigate("dashboard")
-      }
+export function GradeSelectPage({ onNavigate, onSelectGrade, selectedCharacter = "mascot" }) {
+  const handleSelectGrade = (gradeId, locked) => {
+    if (!locked) {
+      onSelectGrade(gradeId)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
-      <motion.div
-        className="w-full max-w-2xl"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="flex justify-center mb-8">
-          <Mascot mood="normal" size="md" message="学年を教えてね！" />
+    <div className="min-h-screen bg-[var(--bg)]">
+      <FloatingDecorations />
+      <Header onNavigate={onNavigate} />
+
+      <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-12">
+        <div className="mb-8 flex justify-center">
+          <Mascot character={selectedCharacter} mood="thinking" size="lg" message="どの学年？" />
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-extrabold text-center text-[var(--text)] mb-8">
-          学年を選んでください
-        </h1>
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 text-center text-2xl font-bold text-[var(--text)] md:text-3xl"
+        >
+          学年を選んでね
+        </motion.h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          {grades.map((grade, i) => (
+        <div className="grid w-full max-w-2xl grid-cols-2 gap-4 md:grid-cols-3">
+          {grades.map((grade, index) => (
             <motion.button
               key={grade.id}
-              onClick={() => grade.available && setSelectedGrade(grade.id)}
-              disabled={!grade.available}
-              className={`
-                relative p-6 rounded-3xl transition-all duration-200
-                ${grade.available
-                  ? selectedGrade === grade.id
-                    ? "bg-[var(--primary-light)] border-2 border-[var(--primary)] shadow-lg"
-                    : "bg-white border-2 border-transparent shadow-[var(--card-shadow)] hover:-translate-y-1 hover:border-[var(--primary)] hover:shadow-lg"
-                  : "bg-gray-100 opacity-40 cursor-not-allowed"
-                }
-              `}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.3 }}
+              transition={{ delay: index * 0.08 }}
+              whileHover={!grade.locked ? { scale: 1.03, y: -4 } : {}}
+              whileTap={!grade.locked ? { scale: 0.97 } : {}}
+              onClick={() => handleSelectGrade(grade.id, grade.locked)}
+              disabled={grade.locked}
+              className={`relative rounded-3xl p-6 text-center shadow-[var(--card-shadow)] transition-all ${
+                grade.locked
+                  ? "cursor-not-allowed bg-gray-100 opacity-60"
+                  : "bg-white hover:shadow-[var(--card-hover-shadow)]"
+              }`}
             >
-              {selectedGrade === grade.id && (
-                <motion.div
-                  className="absolute top-3 right-3 w-6 h-6 bg-[var(--primary)] rounded-full flex items-center justify-center"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500 }}
-                >
-                  <Check className="w-4 h-4 text-white" />
-                </motion.div>
-              )}
-
-              {!grade.available && (
-                <div className="absolute top-3 right-3">
-                  <Lock className="w-4 h-4 text-gray-400" />
+              {grade.locked && (
+                <div className="absolute right-3 top-3">
+                  <Lock className="h-4 w-4 text-[var(--text-muted)]" />
                 </div>
               )}
-
-              <div className="text-4xl mb-3">{grade.emoji}</div>
-              <div className="font-bold text-[var(--text)] mb-1">{grade.label}</div>
-              <div className={`text-xs ${grade.available ? "text-[var(--primary)]" : "text-gray-400"}`}>
-                {grade.subjects}
-              </div>
+              <div className="mb-2 text-3xl">{grade.emoji}</div>
+              <h3 className="mb-2 text-lg font-bold text-[var(--text)]">{grade.label}</h3>
+              {grade.locked ? (
+                <p className="text-xs text-[var(--text-muted)]">準備中...</p>
+              ) : (
+                <p className="text-xs text-[var(--success)]">英語・数学対応中 ✅</p>
+              )}
             </motion.button>
           ))}
         </div>
-
-        <div className="flex justify-center">
-          <motion.button
-            onClick={handleNext}
-            disabled={!selectedGrade}
-            className={`
-              px-8 py-4 rounded-2xl font-bold text-lg flex items-center gap-2 transition-all duration-200
-              ${selectedGrade
-                ? "bg-[var(--primary)] text-white hover:shadow-lg hover:scale-105"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }
-            `}
-            whileTap={selectedGrade ? { scale: 0.98 } : {}}
-          >
-            次へ
-            <ArrowRight className="w-5 h-5" />
-          </motion.button>
-        </div>
-      </motion.div>
+      </main>
     </div>
   )
 }

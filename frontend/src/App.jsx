@@ -4,12 +4,15 @@ import { useAuth } from './contexts/AuthContext'
 import { FloatingDecorations } from './components/FloatingDecorations'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
+import { CharacterSelectPage } from './pages/CharacterSelectPage'
 import { GradeSelectPage } from './pages/GradeSelectPage'
-import { PricingPage } from './pages/PricingPage'
+import { StageMapPage } from './pages/StageMapPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { PricingPage } from './pages/PricingPage'
 import { QuizPage } from './pages/QuizPage'
 import { ResultsPage } from './pages/ResultsPage'
 import { ReviewPage } from './pages/ReviewPage'
+import { MyPage } from './pages/MyPage'
 import {
   getGrades,
   fetchUnits,
@@ -32,11 +35,12 @@ export default function App() {
   const [page, setPage] = useState('landing')
   const [selectedGradeId, setSelectedGradeId] = useState(null)
   const [selectedSubject, setSelectedSubject] = useState('english')
+  const [selectedCharacter, setSelectedCharacter] = useState('mascot')
   const [units, setUnits] = useState([])
   const [currentUnit, setCurrentUnit] = useState(null)
   const [currentQuestions, setCurrentQuestions] = useState([])
   const [quizAnswers, setQuizAnswers] = useState([])
-  const [stats, setStats] = useState({ totalAnswered: 0, accuracy: 0, streakDays: 0 })
+  const [stats, setStats] = useState({ totalAnswers: 0, accuracy: 0, streak: 0 })
   const [usageToday, setUsageToday] = useState(0)
   const [dailyLimit, setDailyLimit] = useState(10)
   const [error, setError] = useState('')
@@ -49,16 +53,16 @@ export default function App() {
     return g ? `${g.label} ${g.emoji}` : ''
   }, [selectedGradeId])
 
-  // Auto-redirect logged-in users to dashboard
+  // Auto-redirect logged-in users to stageMap
   useEffect(() => {
     if (!authLoading && user && page === 'landing') {
       const grade = profile?.grade || 'j1'
       setSelectedGradeId(grade)
-      setPage('dashboard')
+      setPage('stageMap')
     }
   }, [authLoading, user, profile])
 
-  // Load dashboard data
+  // Load data when entering stageMap or dashboard
   const loadDashboardData = useCallback(async (gradeId) => {
     if (!user) return
     setDataLoading(true)
@@ -79,7 +83,11 @@ export default function App() {
       }))
 
       setUnits(unitsWithProgress)
-      setStats(statsData)
+      setStats({
+        totalAnswers: statsData.totalAnswered || 0,
+        accuracy: statsData.accuracy || 0,
+        streak: statsData.streakDays || 0,
+      })
       setUsageToday(usage)
       setDailyLimit(limit)
     } catch (err) {
@@ -90,7 +98,7 @@ export default function App() {
   }, [user, planTier])
 
   useEffect(() => {
-    if (page === 'dashboard' && selectedGradeId && user) {
+    if ((page === 'stageMap' || page === 'dashboard') && selectedGradeId && user) {
       loadDashboardData(selectedGradeId)
     }
   }, [page, selectedGradeId, user, loadDashboardData])
@@ -100,37 +108,32 @@ export default function App() {
     setPage(pageName)
   }
 
-  // Grade select
-  const handleSelectGrade = (gradeLabel) => {
-    // Find grade by label match
-    const grade = grades.find(
-      (g) => g.label === gradeLabel || `${g.label} ${g.emoji}` === gradeLabel
-    )
-    if (grade) {
-      setSelectedGradeId(grade.id)
-    }
+  // Character select
+  const handleSelectCharacter = (character) => {
+    setSelectedCharacter(character)
   }
 
-  const handleConfirmGradeAndNavigate = async (gradeLabel) => {
-    handleSelectGrade(gradeLabel)
-    const grade = grades.find(
-      (g) => g.label === gradeLabel || `${g.label} ${g.emoji}` === gradeLabel
-    )
-    if (grade && user) {
+  // Grade select
+  const handleSelectGrade = (gradeId) => {
+    setSelectedGradeId(gradeId)
+  }
+
+  const handleConfirmGradeAndNavigate = async (gradeId) => {
+    handleSelectGrade(gradeId)
+    if (user) {
       try {
-        await updateProfileGrade(user.id, grade.id)
+        await updateProfileGrade(user.id, gradeId)
         await refreshProfile()
       } catch { /* ignore */ }
     }
-    setPage('dashboard')
+    setPage('stageMap')
   }
 
-  // Unit select from dashboard
+  // Unit select from stage map
   const handleSelectUnit = async (subject, unitSlug) => {
     setSelectedSubject(subject)
     setError('')
 
-    // Find real unit from loaded units
     const unit = units.find((u) => u.slug === unitSlug)
     const resolvedUnit = unit || { slug: unitSlug, title: unitSlug }
 
@@ -141,7 +144,6 @@ export default function App() {
       setQuizAnswers([])
       setPage('quiz')
     } catch (err) {
-      // API failed — navigate to quiz with empty questions (uses fallback dummy data)
       console.warn('API問題生成失敗、ダミーデータを使用:', err.message)
       setCurrentUnit(resolvedUnit)
       setCurrentQuestions([])
@@ -200,35 +202,53 @@ export default function App() {
           />
         )
 
+      case 'characterSelect':
+        return (
+          <CharacterSelectPage
+            onNavigate={handleNavigate}
+            onSelectCharacter={handleSelectCharacter}
+          />
+        )
+
       case 'gradeSelect':
         return (
           <GradeSelectPage
             onNavigate={(p) => {
-              if (p === 'dashboard') {
-                // GradeSelectPage calls onNavigate("dashboard") after selecting
-                setPage('dashboard')
+              if (p === 'dashboard' || p === 'stageMap') {
+                setPage('stageMap')
               } else {
                 setPage(p)
               }
             }}
             onSelectGrade={handleConfirmGradeAndNavigate}
+            selectedCharacter={selectedCharacter}
           />
         )
 
       case 'pricing':
         return <PricingPage onNavigate={handleNavigate} isLoggedIn={isLoggedIn} />
 
-      case 'dashboard':
+      case 'stageMap':
         return (
-          <DashboardPage
+          <StageMapPage
             onNavigate={handleNavigate}
-            grade={selectedGradeLabel}
+            grade={selectedGradeId}
             onSelectUnit={handleSelectUnit}
             units={units}
             stats={stats}
             usageToday={usageToday}
             dailyLimit={dailyLimit}
             userName={profile?.display_name || ''}
+            selectedCharacter={selectedCharacter}
+          />
+        )
+
+      case 'dashboard':
+        return (
+          <DashboardPage
+            onNavigate={handleNavigate}
+            userName={profile?.display_name || ''}
+            selectedCharacter={selectedCharacter}
           />
         )
 
@@ -237,8 +257,10 @@ export default function App() {
           <QuizPage
             onNavigate={handleNavigate}
             subject={selectedSubject}
+            unitTitle={currentUnit?.title || ''}
             onComplete={handleQuizComplete}
             questions={currentQuestions}
+            selectedCharacter={selectedCharacter}
           />
         )
 
@@ -248,6 +270,7 @@ export default function App() {
             onNavigate={handleNavigate}
             subject={selectedSubject}
             answers={quizAnswers}
+            selectedCharacter={selectedCharacter}
           />
         )
 
@@ -257,6 +280,21 @@ export default function App() {
             onNavigate={handleNavigate}
             subject={selectedSubject}
             answers={quizAnswers}
+            questions={currentQuestions}
+            selectedCharacter={selectedCharacter}
+          />
+        )
+
+      case 'myPage':
+        return (
+          <MyPage
+            onNavigate={handleNavigate}
+            userName={profile?.display_name || ''}
+            grade={selectedGradeId || 'j1'}
+            selectedCharacter={selectedCharacter}
+            onSelectCharacter={handleSelectCharacter}
+            planTier={planTier || 'free'}
+            stats={stats}
           />
         )
 
@@ -271,7 +309,7 @@ export default function App() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      {dataLoading && page === 'dashboard' ? (
+      {dataLoading && (page === 'stageMap' || page === 'dashboard') ? (
         <div className="loading-screen">
           <p>読み込み中...</p>
         </div>

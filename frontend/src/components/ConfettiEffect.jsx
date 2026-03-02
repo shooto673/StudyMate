@@ -1,36 +1,27 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
-const colors = [
-  "var(--primary)",
-  "var(--accent)",
-  "var(--english)",
-  "var(--math)",
-  "var(--success)",
-  "var(--warning)",
-]
+const colors = ["#FF6B6B", "#4DABF7", "#51CF66", "#FCC419", "#6C63FF", "#FF922B"]
 
 export function ConfettiEffect({ isActive, onComplete }) {
-  const [confetti, setConfetti] = useState([])
+  const [pieces, setPieces] = useState([])
 
   useEffect(() => {
     if (isActive) {
-      const newConfetti = Array.from({ length: 30 }, (_, i) => ({
+      const newPieces = Array.from({ length: 50 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         color: colors[Math.floor(Math.random() * colors.length)],
-        size: 6 + Math.random() * 8,
-        type: Math.random() > 0.5 ? "circle" : "star",
         delay: Math.random() * 0.5,
-        duration: 3 + Math.random() * 2,
-        sway: (Math.random() - 0.5) * 100,
+        rotation: Math.random() * 360,
+        size: Math.random() * 8 + 6,
       }))
-      setConfetti(newConfetti)
+      setPieces(newPieces)
 
       const timer = setTimeout(() => {
-        setConfetti([])
+        setPieces([])
         onComplete?.()
-      }, 5000)
+      }, 3000)
 
       return () => clearTimeout(timer)
     }
@@ -38,45 +29,36 @@ export function ConfettiEffect({ isActive, onComplete }) {
 
   return (
     <AnimatePresence>
-      {confetti.length > 0 && (
-        <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden">
-          {confetti.map((item) => (
+      {pieces.length > 0 && (
+        <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+          {pieces.map((piece) => (
             <motion.div
-              key={item.id}
+              key={piece.id}
+              className="absolute rounded-sm"
+              style={{
+                left: `${piece.x}%`,
+                top: -20,
+                width: piece.size,
+                height: piece.size * 0.6,
+                backgroundColor: piece.color,
+              }}
               initial={{
-                x: `${item.x}vw`,
                 y: -20,
-                rotate: 0,
+                rotate: piece.rotation,
                 opacity: 1,
               }}
               animate={{
-                y: "110vh",
-                x: `calc(${item.x}vw + ${item.sway}px)`,
-                rotate: 720,
-                opacity: [1, 1, 0],
+                y: "100vh",
+                rotate: piece.rotation + 720,
+                opacity: 0,
               }}
               transition={{
-                duration: item.duration,
-                delay: item.delay,
-                ease: "linear",
+                duration: 2.5,
+                delay: piece.delay,
+                ease: "easeIn",
               }}
-              style={{
-                position: "absolute",
-                width: item.size,
-                height: item.size,
-              }}
-            >
-              {item.type === "circle" ? (
-                <div
-                  className="w-full h-full rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-              ) : (
-                <svg viewBox="0 0 24 24" fill={item.color} className="w-full h-full">
-                  <polygon points="12,2 15,9 22,9 17,14 19,22 12,17 5,22 7,14 2,9 9,9" />
-                </svg>
-              )}
-            </motion.div>
+              exit={{ opacity: 0 }}
+            />
           ))}
         </div>
       )}
