@@ -78,7 +78,8 @@ export default async function handler(req, res) {
         const userId = session.metadata?.supabase_user_id
         const planTier = session.metadata?.plan_tier
         if (userId && planTier) {
-          await upsertSubscription(userId, planTier, 'active', session.subscription)
+          const normalizedTier = (planTier === 'light' || planTier === 'basic') ? 'free' : planTier
+          await upsertSubscription(userId, normalizedTier, 'active', session.subscription)
           await recordBillingEvent(userId, eventId, eventType, session)
         }
         break

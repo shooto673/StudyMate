@@ -14,6 +14,8 @@ import { ResultsPage } from './pages/ResultsPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { MyPage } from './pages/MyPage'
 import { SectionPage } from './pages/SectionPage'
+import { ParentReportPage } from './pages/ParentReportPage'
+import { DifficultySelector } from './components/DifficultySelector'
 import { SUB_UNITS, getSubjectFromSlug } from './lib/subUnits'
 import {
   getGrades,
@@ -40,7 +42,7 @@ export default function App() {
   const [selectedCharacter, setSelectedCharacter] = useState('mascot')
   const [units, setUnits] = useState([])
   const [currentUnit, setCurrentUnit] = useState(null)
-  const [currentParentUnit, setCurrentParentUnit] = useState(null) // セクションページ用
+  const [currentParentUnit, setCurrentParentUnit] = useState(null)
   const [currentQuestions, setCurrentQuestions] = useState([])
   const [quizAnswers, setQuizAnswers] = useState([])
   const [stats, setStats] = useState({ totalAnswers: 0, accuracy: 0, streak: 0 })
@@ -49,6 +51,16 @@ export default function App() {
   const [error, setError] = useState('')
   const [dataLoading, setDataLoading] = useState(false)
 
+  // 日次制限モーダル
+  const [limitReachedModal, setLimitReachedModal] = useState(false)
+
+  // 難易度選択
+  const [showDifficultySelector, setShowDifficultySelector] = useState(false)
+  const [pendingQuizParams, setPendingQuizParams] = useState(null)
+
+  // 保護者レポートトークン
+  const [reportToken, setReportToken] = useState(null)
+
   const isLoggedIn = !!user
 
   const selectedGradeLabel = useMemo(() => {
@@ -56,9 +68,19 @@ export default function App() {
     return g ? `${g.label} ${g.emoji}` : ''
   }, [selectedGradeId])
 
-  // Auto-redirect logged-in users: grade set → stageMap, no grade → gradeSelect
+  // URL解析で保護者レポートトークンを検出
   useEffect(() => {
-    if (!authLoading && user && page === 'landing') {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('report')
+    if (token) {
+      setReportToken(token)
+      setPage('parentReport')
+    }
+  }, [])
+
+  // Auto-redirect logged-in users
+  useEffect(() => {
+    if (!authLoading && user && page === 'landing' && !reportToken) {
       if (profile?.grade) {
         setSelectedGradeId(profile.grade)
         setPage('stageMap')
@@ -131,12 +153,10 @@ export default function App() {
     setPage(pageName)
   }
 
-  // Character select
   const handleSelectCharacter = (character) => {
     setSelectedCharacter(character)
   }
 
-  // Grade select
   const handleSelectGrade = (gradeId) => {
     setSelectedGradeId(gradeId)
   }
@@ -152,7 +172,7 @@ export default function App() {
     setPage('stageMap')
   }
 
-  // Unit select from stage map → section page (副単元があればセクションへ、なければ直接クイズ)
+  // Unit select from stage map
   const handleSelectUnit = async (subject, unitSlug) => {
     setSelectedSubject(subject)
     setError('')
@@ -160,7 +180,6 @@ export default function App() {
     const unit = units.find((u) => u.slug === unitSlug)
     const resolvedUnit = unit || { slug: unitSlug, title: unitSlug }
 
-    // 副単元データがあればセクションページへ遷移
     const subs = SUB_UNITS[unitSlug]
     if (subs && subs.length > 0) {
       setCurrentParentUnit({
@@ -173,20 +192,61 @@ export default function App() {
       return
     }
 
-    // 副単元がなければ直接クイズ
     await startQuiz(subject, resolvedUnit.slug, resolvedUnit)
   }
 
-  // Sub-unit select from section page → quiz
+  // Sub-unit select from section page
   const handleSelectSubUnit = async (subject, subUnitSlug) => {
     await startQuiz(subject, subUnitSlug, currentUnit)
   }
 
-  // Shared quiz start logic
+  // ─── 日次制限チェック + 難易度選択 + クイズ開始 ─────────
   const startQuiz = async (subject, slug, unitForLog) => {
     setSelectedSubject(subject)
+
+    // 日次制限チェック
+    if (user) {
+      try {
+        const [currentUsage, limit] = await Promise.all([
+          fetchUsageToday(user.id),
+          fetchPlanLimit(planTier),
+        ])
+        if (currentUsage >= limit) {
+          setUsageToday(currentUsage)
+          setDailyLimit(limit)
+          setLimitReachedModal(true)
+          return
+        }
+      } catch (err) {
+        console.warn('Usage check failed:', err)
+      }
+    }
+
+    // Standard/Premium → 難易度選択を表示
+    if (planTier === 'standard' || planTier === 'premium') {
+      setPendingQuizParams({ subject, slug, unitForLog })
+      setShowDifficultySelector(true)
+      return
+    }
+
+    // Free → 直接「normal」で開始
+    await proceedWithQuiz(subject, slug, unitForLog, 'normal')
+  }
+
+  // 難易度選択後のクイズ開始
+  const handleDifficultySelected = async (difficulty) => {
+    setShowDifficultySelector(false)
+    if (!pendingQuizParams) return
+    const { subject, slug, unitForLog } = pendingQuizParams
+    setPendingQuizParams(null)
+    await proceedWithQuiz(subject, slug, unitForLog, difficulty)
+  }
+
+  // 実際にクイズを開始
+  const proceedWithQuiz = async (subject, slug, unitForLog, difficulty) => {
+    setSelectedSubject(subject)
     try {
-      const rawQuestions = await fetchQuestions(slug)
+      const rawQuestions = await fetchQuestions(slug, 5, difficulty)
       const mapped = rawQuestions.map((q) => ({
         id: q.id,
         text: q.body,
@@ -282,7 +342,15 @@ export default function App() {
         )
 
       case 'pricing':
-        return <PricingPage onNavigate={handleNavigate} isLoggedIn={isLoggedIn} />
+        return (
+          <PricingPage
+            onNavigate={handleNavigate}
+            isLoggedIn={isLoggedIn}
+            planTier={planTier || 'free'}
+            user={user}
+            userEmail={user?.email || ''}
+          />
+        )
 
       case 'stageMap':
         return (
@@ -294,6 +362,7 @@ export default function App() {
             stats={stats}
             usageToday={usageToday}
             dailyLimit={dailyLimit}
+            planTier={planTier || 'free'}
             userName={profile?.display_name || ''}
             selectedCharacter={selectedCharacter}
           />
@@ -364,8 +433,12 @@ export default function App() {
             onSelectCharacter={handleSelectCharacter}
             planTier={planTier || 'free'}
             stats={stats}
+            userId={user?.id}
           />
         )
+
+      case 'parentReport':
+        return <ParentReportPage token={reportToken} onNavigate={handleNavigate} />
 
       default:
         return <LandingPage onNavigate={handleNavigate} />
@@ -377,6 +450,68 @@ export default function App() {
       <FloatingDecorations />
 
       {error && <div className="error-banner">{error}</div>}
+
+      {/* 日次制限モーダル */}
+      <AnimatePresence>
+        {limitReachedModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setLimitReachedModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl"
+            >
+              <div className="mb-4 text-4xl">🚫</div>
+              <h3 className="mb-2 text-xl font-bold text-[var(--text)]">今日の上限に達しました</h3>
+              <p className="mb-4 text-sm text-[var(--text-sub)]">
+                本日は {usageToday}/{dailyLimit}問 を解きました。<br />
+                もっと勉強したい場合はプランをアップグレードしましょう！
+              </p>
+              <div className="flex flex-col gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setLimitReachedModal(false)
+                    setPage('pricing')
+                  }}
+                  className="w-full rounded-2xl bg-[var(--primary)] py-3 font-bold text-white shadow-md"
+                >
+                  プランを見る ⭐
+                </motion.button>
+                <button
+                  onClick={() => setLimitReachedModal(false)}
+                  className="text-sm text-[var(--text-muted)] underline hover:no-underline"
+                >
+                  閉じる
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 難易度選択モーダル */}
+      <AnimatePresence>
+        {showDifficultySelector && (
+          <DifficultySelector
+            subject={selectedSubject}
+            selectedCharacter={selectedCharacter}
+            onSelect={handleDifficultySelected}
+            onCancel={() => {
+              setShowDifficultySelector(false)
+              setPendingQuizParams(null)
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {dataLoading && (page === 'stageMap' || page === 'dashboard') ? (
         <div className="loading-screen">

@@ -289,7 +289,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { unitSlug, count = 5 } = req.body
+  const { unitSlug, count = 5, difficulty = 'normal' } = req.body
 
   const unitInfo = UNIT_PROMPTS[unitSlug]
   if (!unitInfo) {
@@ -298,6 +298,14 @@ export default async function handler(req, res) {
 
   // 毎回異なる問題を生成するためのランダムシード
   const seed = Math.random().toString(36).slice(2, 8)
+
+  // 難易度別の指示
+  const difficultyInstructions = {
+    easy: '【難易度】やさしめ：基本的な問題を出してください。ひっかけ問題は避け、最も基礎的なパターンのみ出題してください。',
+    normal: '【難易度】ふつう：標準的な難易度の問題を出してください。基本問題と少しの応用を混ぜてください。',
+    hard: '【難易度】むずかしめ：応用力が試される問題を出してください。ひっかけや複合的な知識が必要な問題も含めてください。',
+  }
+  const difficultyPrompt = difficultyInstructions[difficulty] || difficultyInstructions.normal
 
   try {
     const message = await anthropic.messages.create({
@@ -315,6 +323,7 @@ export default async function handler(req, res) {
 【単元】${unitInfo.topic}
 【詳細】${unitInfo.details}
 【ランダムシード】${seed}（このシードに基づき、毎回全く異なる数値・問題パターンを生成してください）
+${difficultyPrompt}
 
 【ルール】
 - 中学生が解ける難易度にすること
@@ -343,6 +352,7 @@ export default async function handler(req, res) {
 【単元】${unitInfo.topic}
 【詳細】${unitInfo.details}
 【ランダムシード】${seed}（このシードに基づき、毎回全く異なる英文・問題パターンを生成してください）
+${difficultyPrompt}
 
 【問題の形式 ★重要】
 - 各問題は、英文の中に空欄 (   ) を1つ入れ、そこに入る語句を4択から選ぶ形式にしてください

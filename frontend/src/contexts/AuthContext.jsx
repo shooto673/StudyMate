@@ -159,7 +159,8 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const planTier = subscription?.plan_tier || 'free'
+  const rawTier = subscription?.plan_tier || 'free'
+  const planTier = (rawTier === 'light' || rawTier === 'basic') ? 'free' : rawTier
 
   return (
     <AuthContext.Provider

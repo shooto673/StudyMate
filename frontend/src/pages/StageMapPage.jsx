@@ -20,6 +20,7 @@ export function StageMapPage({
   stats = { totalAnswers: 0, accuracy: 0, streak: 0 },
   usageToday = 0,
   dailyLimit = 10,
+  planTier = "free",
   userName = "",
   selectedCharacter = "mascot",
 }) {
@@ -84,7 +85,26 @@ export function StageMapPage({
                 <span className="rounded-full bg-[var(--success-light)] px-3 py-1 text-[var(--success)] font-medium">{stats.accuracy}%正答率</span>
                 <span className="rounded-full bg-[var(--accent-light)] px-3 py-1 text-[var(--accent)] font-medium">{stats.streak}日連続</span>
               </div>
-              <div className="mt-2 text-xs text-[var(--text-sub)]">今日 {usageToday}/{dailyLimit}問</div>
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className={`font-medium ${usageToday >= dailyLimit && planTier !== 'premium' ? 'text-[var(--error)]' : 'text-[var(--text-sub)]'}`}>
+                    今日 {usageToday}/{planTier === 'premium' ? '∞' : dailyLimit}問
+                  </span>
+                  {usageToday >= dailyLimit && planTier !== 'premium' && (
+                    <span className="rounded-full bg-[var(--error-light)] px-2 py-0.5 text-[var(--error)] font-medium">上限到達</span>
+                  )}
+                </div>
+                {planTier !== 'premium' && (
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--bg-sub)]">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((usageToday / dailyLimit) * 100, 100)}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className={`h-full rounded-full ${usageToday >= dailyLimit ? 'bg-[var(--error)]' : 'bg-[var(--primary)]'}`}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </motion.div>

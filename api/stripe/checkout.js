@@ -8,7 +8,6 @@ const supabase = createClient(
 )
 
 const PRICE_MAP = {
-  light: process.env.STRIPE_PRICE_LIGHT,
   standard: process.env.STRIPE_PRICE_STANDARD,
   premium: process.env.STRIPE_PRICE_PREMIUM,
 }
