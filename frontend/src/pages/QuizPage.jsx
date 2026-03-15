@@ -6,7 +6,7 @@ import { ConfettiEffect } from "../components/ConfettiEffect"
 
 const optionLabels = ["A", "B", "C", "D"]
 
-const dummyQuestions = [
+const dummyEnglish = [
   { id: "q1", text: "She (   ) a student.", translation: "彼女は生徒です。", options: ["am", "is", "are", "be"], correctIndex: 1, explanation: "主語がSheのときはisです。" },
   { id: "q2", text: "I (   ) from Osaka.", translation: "私は大阪出身です。", options: ["am", "is", "are", "be"], correctIndex: 0, explanation: "Iのときはamを使います。" },
   { id: "q3", text: "They (   ) my friends.", translation: "彼らは私の友達です。", options: ["am", "is", "are", "be"], correctIndex: 2, explanation: "複数主語Theyにはareを使います。" },
@@ -14,7 +14,16 @@ const dummyQuestions = [
   { id: "q5", text: "(   ) you a student?", translation: "あなたは生徒ですか？（疑問文）", options: ["Do", "Are", "Is", "Does"], correctIndex: 1, explanation: "be動詞の疑問文はbe動詞を先頭に出します。" },
 ]
 
+const dummyMath = [
+  { id: "mq1", text: "(-3) + (+5) = ?", translation: "", options: ["2", "-2", "8", "-8"], correctIndex: 0, explanation: "符号が違う場合、絶対値の大きい方の符号になります。5-3=2" },
+  { id: "mq2", text: "(-4) × (-6) = ?", translation: "", options: ["-24", "24", "-10", "10"], correctIndex: 1, explanation: "負×負=正。4×6=24なので答えは+24です。" },
+  { id: "mq3", text: "2x + 3x = ?", translation: "", options: ["5x", "6x", "5x²", "6"], correctIndex: 0, explanation: "同類項をまとめます。2x+3x=5xです。" },
+  { id: "mq4", text: "x + 5 = 12 のとき、x = ?", translation: "", options: ["7", "17", "5", "-7"], correctIndex: 0, explanation: "両辺から5を引いて x=12-5=7 です。" },
+  { id: "mq5", text: "|-8| = ?", translation: "", options: ["8", "-8", "0", "1"], correctIndex: 0, explanation: "絶対値は0からの距離なので|-8|=8です。" },
+]
+
 export function QuizPage({ onNavigate, subject = "english", unitTitle = "", onComplete, questions: questionsProp = [], selectedCharacter = "mascot" }) {
+  const dummyQuestions = subject === "math" ? dummyMath : dummyEnglish
   const questions = questionsProp.length > 0 ? questionsProp : dummyQuestions
 
   const [currentIndex, setCurrentIndex] = useState(0)
