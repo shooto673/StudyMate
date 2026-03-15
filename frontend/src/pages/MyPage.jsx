@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, LogOut, ChevronRight, CreditCard, GraduationCap } from "lucide-react"
+import { Check, LogOut, ChevronRight, CreditCard, GraduationCap, ArrowLeft } from "lucide-react"
 import { Header } from "../components/Header"
 import { FloatingDecorations } from "../components/FloatingDecorations"
 import { Mascot } from "../components/Mascot"
@@ -20,6 +20,7 @@ const planInfo = {
 
 export function MyPage({
   onNavigate,
+  onLogout,
   userName = "",
   grade = "j1",
   selectedCharacter = "mascot",
@@ -46,6 +47,19 @@ export function MyPage({
       <Header isLoggedIn grade={gradeLabels[grade]} onNavigate={onNavigate} />
 
       <main className="mx-auto max-w-2xl px-4 py-6">
+        {/* Back to Map */}
+        <motion.button
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onNavigate("stageMap")}
+          className="mb-4 flex items-center gap-2 rounded-2xl bg-white px-5 py-3 font-medium text-[var(--primary)] shadow-[var(--card-shadow)] transition-all hover:shadow-md"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          マップに戻る
+        </motion.button>
+
         {/* Profile Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 rounded-3xl bg-white p-6 shadow-[var(--card-shadow)]">
           <div className="flex flex-col items-center text-center">
@@ -142,7 +156,7 @@ export function MyPage({
               <div className="flex items-center gap-3"><GraduationCap className="h-5 w-5 text-[var(--text-sub)]" /><span className="font-medium text-[var(--text)]">学年変更</span></div>
               <ChevronRight className="h-5 w-5 text-[var(--text-muted)]" />
             </motion.button>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => onNavigate("landing")}
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onLogout || (() => onNavigate("landing"))}
               className="flex w-full items-center justify-between rounded-2xl border-2 border-[var(--error-light)] bg-white p-4 text-[var(--error)] transition-all hover:bg-[var(--error-light)]">
               <div className="flex items-center gap-3"><LogOut className="h-5 w-5" /><span className="font-medium">ログアウト</span></div>
             </motion.button>

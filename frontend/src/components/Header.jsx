@@ -10,7 +10,7 @@ export function Header({ isLoggedIn = false, grade, onNavigate, className = "" }
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <button
-          onClick={() => onNavigate("landing")}
+          onClick={() => onNavigate(isLoggedIn ? "stageMap" : "landing")}
           className="flex items-center gap-2 text-xl font-bold text-[var(--text)] transition-transform hover:scale-105"
         >
           <span className="text-2xl">📖</span>

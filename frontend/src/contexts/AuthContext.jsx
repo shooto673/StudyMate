@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
         id: authUser.id,
         display_name: displayName,
         avatar_url: avatarUrl,
-        grade: 'j1',
+        grade: null,
       })
     }
 

@@ -7,11 +7,11 @@ import { ConfettiEffect } from "../components/ConfettiEffect"
 const optionLabels = ["A", "B", "C", "D"]
 
 const dummyQuestions = [
-  { id: "q1", text: "She (   ) a student.", options: ["am", "is", "are", "be"], correctIndex: 1, explanation: "主語がSheのときはisです。" },
-  { id: "q2", text: "I (   ) from Osaka.", options: ["am", "is", "are", "be"], correctIndex: 0, explanation: "Iのときはamを使います。" },
-  { id: "q3", text: "They (   ) my friends.", options: ["am", "is", "are", "be"], correctIndex: 2, explanation: "複数主語Theyにはareを使います。" },
-  { id: "q4", text: "He is tired. の否定文は？", options: ["He not is tired.", "He is not tired.", "He does not tired.", "He are not tired."], correctIndex: 1, explanation: "be動詞の否定はbe動詞 + notです。" },
-  { id: "q5", text: "You are a student. の疑問文は？", options: ["Do you a student?", "Are you a student?", "Is you a student?", "Does you a student?"], correctIndex: 1, explanation: "be動詞の疑問文はbe動詞を先頭に出します。" },
+  { id: "q1", text: "She (   ) a student.", translation: "彼女は生徒です。", options: ["am", "is", "are", "be"], correctIndex: 1, explanation: "主語がSheのときはisです。" },
+  { id: "q2", text: "I (   ) from Osaka.", translation: "私は大阪出身です。", options: ["am", "is", "are", "be"], correctIndex: 0, explanation: "Iのときはamを使います。" },
+  { id: "q3", text: "They (   ) my friends.", translation: "彼らは私の友達です。", options: ["am", "is", "are", "be"], correctIndex: 2, explanation: "複数主語Theyにはareを使います。" },
+  { id: "q4", text: "He (   ) tired.", translation: "彼は疲れていません。（否定文）", options: ["not is", "is not", "does not", "are not"], correctIndex: 1, explanation: "be動詞の否定はbe動詞 + notです。" },
+  { id: "q5", text: "(   ) you a student?", translation: "あなたは生徒ですか？（疑問文）", options: ["Do", "Are", "Is", "Does"], correctIndex: 1, explanation: "be動詞の疑問文はbe動詞を先頭に出します。" },
 ]
 
 export function QuizPage({ onNavigate, subject = "english", unitTitle = "", onComplete, questions: questionsProp = [], selectedCharacter = "mascot" }) {
@@ -124,11 +124,24 @@ export function QuizPage({ onNavigate, subject = "english", unitTitle = "", onCo
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-6">
-        <motion.div key={currentIndex} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="rounded-3xl bg-white p-6 shadow-[var(--card-shadow)]">
+        <motion.div key={currentIndex} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className={`rounded-3xl bg-white p-6 shadow-[var(--card-shadow)] ${hasAnswered && !isCorrect ? "animate-shake" : ""}`}>
           <div className="mb-4 inline-flex rounded-full px-4 py-1 text-sm font-bold text-white" style={{ backgroundColor: subjectColor }}>
             Q{currentIndex + 1}
           </div>
-          <h2 className="mb-6 text-lg font-bold text-[var(--text)]">{currentQuestion.text}</h2>
+
+          {/* 指示文 */}
+          <p className="mb-3 text-sm font-medium text-[var(--text-sub)]">
+            {subject === "english" ? "🔤 空欄に入るものを選んでみよう！" : "🔢 正しい答えを選んでみよう！"}
+          </p>
+
+          {/* 問題文（英文 or 数学） */}
+          <h2 className="mb-2 text-lg font-bold text-[var(--text)]">{currentQuestion.text}</h2>
+
+          {/* 日本語訳（英語問題のみ） */}
+          {subject === "english" && currentQuestion.translation && (
+            <p className="mb-6 text-sm text-[var(--text-sub)]">（{currentQuestion.translation}）</p>
+          )}
+          {(!currentQuestion.translation || subject !== "english") && <div className="mb-6" />}
 
           <div className="mb-6 flex justify-center">
             <Mascot character={selectedCharacter} mood={getMascotMood()} size="md" message={getMascotMessage()} />

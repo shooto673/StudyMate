@@ -70,10 +70,13 @@ export async function fetchQuestions(unitSlug, count = 5) {
 // ─── 解答記録 ──────────────────────────
 
 export async function saveAnswerLog(userId, questionId, unitId, selectedIndex, isCorrect) {
+  // question_id は uuid 型 — AI生成の仮IDは保存しない
+  const isValidUuid = typeof questionId === 'string' && /^[0-9a-f]{8}-/.test(questionId)
+
   const { error } = await supabase.from('answer_logs').insert({
     user_id: userId,
-    question_id: questionId,
-    unit_id: unitId,
+    question_id: isValidUuid ? questionId : null,
+    unit_id: unitId || null,
     selected_index: selectedIndex,
     is_correct: isCorrect,
   })
@@ -120,36 +123,36 @@ export async function fetchUsageToday(userId) {
   const today = new Date().toISOString().slice(0, 10)
   const { data, error } = await supabase
     .from('usage_daily')
-    .select('used_count')
+    .select('question_count')
     .eq('user_id', userId)
-    .eq('ymd', today)
+    .eq('usage_date', today)
     .single()
 
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows
-  return data?.used_count || 0
+  return data?.question_count || 0
 }
 
 export async function incrementUsage(userId) {
   const today = new Date().toISOString().slice(0, 10)
 
-  // upsert: 存在しなければ insert, あれば used_count + 1
+  // upsert: 存在しなければ insert, あれば question_count + 1
   const { data: existing } = await supabase
     .from('usage_daily')
-    .select('id, used_count')
+    .select('id, question_count')
     .eq('user_id', userId)
-    .eq('ymd', today)
+    .eq('usage_date', today)
     .single()
 
   if (existing) {
     await supabase
       .from('usage_daily')
-      .update({ used_count: existing.used_count + 1 })
+      .update({ question_count: existing.question_count + 1 })
       .eq('id', existing.id)
   } else {
     await supabase.from('usage_daily').insert({
       user_id: userId,
-      ymd: today,
-      used_count: 1,
+      usage_date: today,
+      question_count: 1,
     })
   }
 }

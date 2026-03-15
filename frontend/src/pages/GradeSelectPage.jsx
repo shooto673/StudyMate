@@ -23,7 +23,7 @@ export function GradeSelectPage({ onNavigate, onSelectGrade, selectedCharacter =
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <FloatingDecorations />
-      <Header onNavigate={onNavigate} />
+      <Header isLoggedIn onNavigate={onNavigate} />
 
       <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4 py-12">
         <div className="mb-8 flex justify-center">

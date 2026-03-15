@@ -25,14 +25,25 @@ export function StageMapPage({
 }) {
   const [activeSubject, setActiveSubject] = useState("english")
   const [showConfetti, setShowConfetti] = useState(false)
+  const [loadingUnit, setLoadingUnit] = useState(null)
   const mapRef = useRef(null)
   const currentNodeRef = useRef(null)
+
+  const handleUnitClick = async (subject, slug) => {
+    if (loadingUnit) return // 連打防止
+    setLoadingUnit(slug)
+    try {
+      await onSelectUnit(subject, slug)
+    } finally {
+      setLoadingUnit(null)
+    }
+  }
 
   const filteredUnits = units
     .filter((u) => u.subject === activeSubject)
     .sort((a, b) => a.order - b.order)
 
-  const allCompleted = filteredUnits.every((u) => u.progress >= 80)
+  const allCompleted = filteredUnits.length > 0 && filteredUnits.every((u) => u.progress >= 80)
 
   useEffect(() => {
     if (currentNodeRef.current) {
@@ -129,7 +140,9 @@ export function StageMapPage({
                       transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
                       style={{ marginLeft: xOffset, height: 160 }} className="flex items-start justify-center pt-4">
                       <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                        onClick={() => onSelectUnit(activeSubject, unit.slug)} className="relative flex flex-col items-center">
+                        onClick={() => handleUnitClick(activeSubject, unit.slug)}
+                        disabled={!!loadingUnit}
+                        className="relative flex flex-col items-center cursor-pointer p-3 -m-3">
                         {style === "mastered" && (
                           <motion.div initial={{ y: 10, opacity: 0, scale: 0 }} animate={{ y: 0, opacity: 1, scale: 1 }} transition={{ delay: index * 0.1 + 0.2 }} className="absolute -top-5 z-20">
                             <Star className="h-7 w-7 fill-[#FCC419] text-[#FCC419] drop-shadow-md" />
@@ -159,7 +172,7 @@ export function StageMapPage({
                           )}
                         </div>
                         <span className={`mt-4 text-sm font-bold ${style === "mastered" || style === "learning" ? "text-[var(--text)]" : "text-[var(--text-muted)]"}`}>
-                          {unit.title}
+                          {loadingUnit === unit.slug ? "読み込み中..." : unit.title}
                         </span>
                         {isCurrent && (
                           <motion.div initial={{ opacity: 0, x: xOffset > 0 ? -30 : 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}

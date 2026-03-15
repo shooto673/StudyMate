@@ -13,6 +13,8 @@ import { QuizPage } from './pages/QuizPage'
 import { ResultsPage } from './pages/ResultsPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { MyPage } from './pages/MyPage'
+import { SectionPage } from './pages/SectionPage'
+import { SUB_UNITS, getSubjectFromSlug } from './lib/subUnits'
 import {
   getGrades,
   fetchUnits,
@@ -30,7 +32,7 @@ import './styles/app.css'
 const grades = getGrades()
 
 export default function App() {
-  const { user, profile, planTier, loading: authLoading, refreshProfile, signInWithGoogle } = useAuth()
+  const { user, profile, planTier, loading: authLoading, refreshProfile, signInWithGoogle, signOut } = useAuth()
 
   const [page, setPage] = useState('landing')
   const [selectedGradeId, setSelectedGradeId] = useState(null)
@@ -38,6 +40,7 @@ export default function App() {
   const [selectedCharacter, setSelectedCharacter] = useState('mascot')
   const [units, setUnits] = useState([])
   const [currentUnit, setCurrentUnit] = useState(null)
+  const [currentParentUnit, setCurrentParentUnit] = useState(null) // セクションページ用
   const [currentQuestions, setCurrentQuestions] = useState([])
   const [quizAnswers, setQuizAnswers] = useState([])
   const [stats, setStats] = useState({ totalAnswers: 0, accuracy: 0, streak: 0 })
@@ -53,12 +56,15 @@ export default function App() {
     return g ? `${g.label} ${g.emoji}` : ''
   }, [selectedGradeId])
 
-  // Auto-redirect logged-in users to stageMap
+  // Auto-redirect logged-in users: grade set → stageMap, no grade → gradeSelect
   useEffect(() => {
     if (!authLoading && user && page === 'landing') {
-      const grade = profile?.grade || 'j1'
-      setSelectedGradeId(grade)
-      setPage('stageMap')
+      if (profile?.grade) {
+        setSelectedGradeId(profile.grade)
+        setPage('stageMap')
+      } else {
+        setPage('gradeSelect')
+      }
     }
   }, [authLoading, user, profile])
 
@@ -103,6 +109,23 @@ export default function App() {
     }
   }, [page, selectedGradeId, user, loadDashboardData])
 
+  // ─── Logout handler ────────────────────
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      setSelectedGradeId(null)
+      setUnits([])
+      setCurrentUnit(null)
+      setCurrentQuestions([])
+      setQuizAnswers([])
+      setStats({ totalAnswers: 0, accuracy: 0, streak: 0 })
+      setUsageToday(0)
+      setPage('landing')
+    } catch {
+      setPage('landing')
+    }
+  }
+
   // ─── Navigation handler ─────────────────
   const handleNavigate = (pageName) => {
     setPage(pageName)
@@ -129,7 +152,7 @@ export default function App() {
     setPage('stageMap')
   }
 
-  // Unit select from stage map
+  // Unit select from stage map → section page (副単元があればセクションへ、なければ直接クイズ)
   const handleSelectUnit = async (subject, unitSlug) => {
     setSelectedSubject(subject)
     setError('')
@@ -137,15 +160,48 @@ export default function App() {
     const unit = units.find((u) => u.slug === unitSlug)
     const resolvedUnit = unit || { slug: unitSlug, title: unitSlug }
 
-    try {
-      const questions = await fetchQuestions(resolvedUnit.slug)
+    // 副単元データがあればセクションページへ遷移
+    const subs = SUB_UNITS[unitSlug]
+    if (subs && subs.length > 0) {
+      setCurrentParentUnit({
+        slug: resolvedUnit.slug,
+        title: resolvedUnit.title,
+        subject: subject,
+      })
       setCurrentUnit(resolvedUnit)
-      setCurrentQuestions(questions)
+      setPage('section')
+      return
+    }
+
+    // 副単元がなければ直接クイズ
+    await startQuiz(subject, resolvedUnit.slug, resolvedUnit)
+  }
+
+  // Sub-unit select from section page → quiz
+  const handleSelectSubUnit = async (subject, subUnitSlug) => {
+    await startQuiz(subject, subUnitSlug, currentUnit)
+  }
+
+  // Shared quiz start logic
+  const startQuiz = async (subject, slug, unitForLog) => {
+    setSelectedSubject(subject)
+    try {
+      const rawQuestions = await fetchQuestions(slug)
+      const mapped = rawQuestions.map((q) => ({
+        id: q.id,
+        text: q.body,
+        options: q.choices,
+        correctIndex: q.correct_index,
+        explanation: q.explanation,
+        translation: q.translation || '',
+      }))
+      setCurrentUnit(unitForLog)
+      setCurrentQuestions(mapped)
       setQuizAnswers([])
       setPage('quiz')
     } catch (err) {
       console.warn('API問題生成失敗、ダミーデータを使用:', err.message)
-      setCurrentUnit(resolvedUnit)
+      setCurrentUnit(unitForLog)
       setCurrentQuestions([])
       setQuizAnswers([])
       setPage('quiz')
@@ -252,6 +308,18 @@ export default function App() {
           />
         )
 
+      case 'section':
+        return (
+          <SectionPage
+            onNavigate={handleNavigate}
+            onSelectSubUnit={handleSelectSubUnit}
+            parentUnit={currentParentUnit || { slug: '', title: '', subject: 'english' }}
+            subUnits={currentParentUnit ? (SUB_UNITS[currentParentUnit.slug] || []) : []}
+            selectedCharacter={selectedCharacter}
+            grade={selectedGradeLabel}
+          />
+        )
+
       case 'quiz':
         return (
           <QuizPage
@@ -289,6 +357,7 @@ export default function App() {
         return (
           <MyPage
             onNavigate={handleNavigate}
+            onLogout={handleLogout}
             userName={profile?.display_name || ''}
             grade={selectedGradeId || 'j1'}
             selectedCharacter={selectedCharacter}

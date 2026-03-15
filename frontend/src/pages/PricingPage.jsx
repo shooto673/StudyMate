@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { Check, Crown, Star } from "lucide-react"
+import { Check, Crown, Star, ArrowLeft } from "lucide-react"
 import { Header } from "../components/Header"
 import { FloatingDecorations } from "../components/FloatingDecorations"
 import { Mascot } from "../components/Mascot"
@@ -50,6 +50,19 @@ export function PricingPage({ onNavigate, isLoggedIn = false }) {
       <Header isLoggedIn={isLoggedIn} onNavigate={onNavigate} />
 
       <main className="mx-auto max-w-6xl px-4 py-12">
+        {isLoggedIn && (
+          <motion.button
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onNavigate("stageMap")}
+            className="mb-6 flex items-center gap-2 rounded-2xl bg-white px-5 py-3 font-medium text-[var(--primary)] shadow-[var(--card-shadow)] transition-all hover:shadow-md"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            マップに戻る
+          </motion.button>
+        )}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
           <h1 className="mb-4 text-3xl font-bold text-[var(--text)] md:text-4xl">料金プラン</h1>
           <p className="text-[var(--text-sub)]">あなたにぴったりのプランを選んでください</p>

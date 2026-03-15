@@ -35,7 +35,11 @@ export function ReviewPage({ onNavigate, subject = "english", answers = [], ques
                   </div>
                 </div>
 
-                <h3 className="mb-4 text-lg font-bold text-[var(--text)]">{question.text}</h3>
+                <h3 className="mb-2 text-lg font-bold text-[var(--text)]">{question.text}</h3>
+                {question.translation && (
+                  <p className="mb-4 text-sm text-[var(--text-sub)]">（{question.translation}）</p>
+                )}
+                {!question.translation && <div className="mb-4" />}
 
                 <div className="mb-4 space-y-2">
                   {question.options.map((option, oIndex) => {
